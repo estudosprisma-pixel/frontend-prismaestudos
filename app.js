@@ -1,6 +1,10 @@
 ﻿const STORAGE_KEY = "prisma-estudos-state-v1";
 const TOKEN_KEY = "prisma-estudos-token";
-const API_BASE = window.location.protocol === "file:" ? "http://localhost:3001/api" : `${window.location.origin}/api`;
+const API_BASE = window.PRISMA_API_BASE || (
+  window.location.protocol === "file:" || ["localhost", "127.0.0.1"].includes(window.location.hostname)
+    ? "http://localhost:3001/api"
+    : "https://backend-prisma-estudos-production.up.railway.app/api"
+);
 
 const today = new Date();
 const isoToday = toISODate(today);
