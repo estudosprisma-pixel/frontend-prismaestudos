@@ -508,46 +508,6 @@ input:focus, select:focus, textarea:focus {
   transform: translateY(0);
 }
 
-.demo-card {
-  display: grid;
-  gap: 12px;
-  padding: 14px;
-  border: 1px solid rgba(148, 163, 184, 0.14);
-  border-radius: 18px;
-  background: rgba(255, 255, 255, 0.045);
-}
-
-.demo-card strong,
-.demo-card small {
-  display: block;
-}
-
-.demo-card small {
-  margin-top: 4px;
-  color: var(--muted);
-}
-
-.demo-users {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-}
-
-.demo-users button {
-  color: var(--text);
-  background: rgba(255, 255, 255, 0.065);
-  border: 1px solid var(--line);
-  border-radius: 13px;
-  padding: 9px 12px;
-  font-weight: 800;
-  transition: transform 0.18s ease, border-color 0.18s ease;
-}
-
-.demo-users button:hover {
-  transform: translateY(-2px);
-  border-color: rgba(34, 211, 238, 0.34);
-}
-
 .login-art {
   position: relative;
   overflow: hidden;

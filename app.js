@@ -10,6 +10,12 @@ const defaultActiveContestId = defaultContestIds[1] || defaultContestIds[0] || "
 const analystContest = editalCatalog.contests.find((contest) => contest.id === "analista-judiciario-area-administrativa");
 const technicianContest = editalCatalog.contests.find((contest) => contest.id === "tecnico-judiciario-area-administrativa");
 const legacyContestIds = new Set(["trt-sp-tecnico", "trt-sp-analista"]);
+const loginAliases = {
+  nat: "nat@prismaestudos.local",
+  "joao.guilherme": "joao.guilherme@prismaestudos.local",
+  joao: "joao.guilherme@prismaestudos.local",
+  admin: "admin@prismaestudos.local"
+};
 
 const seedState = {
   currentUserId: null,
@@ -258,14 +264,6 @@ function bindLogin() {
     await submitLogin();
   });
 
-  document.querySelectorAll(".demo-users button").forEach((button) => {
-    button.addEventListener("click", () => {
-      $("#login-email").value = button.dataset.login;
-      $("#login-password").value = button.dataset.password;
-      submitLogin();
-    });
-  });
-
   $("#toggle-password")?.addEventListener("click", () => {
     const input = $("#login-password");
     const isPassword = input.type === "password";
@@ -285,13 +283,20 @@ async function submitLogin() {
   button.textContent = "Entrando...";
   message.className = "login-message is-loading";
   message.textContent = "Validando acesso ao Prisma Estudos...";
-  const success = await login($("#login-email").value.trim(), $("#login-password").value);
+  const success = await login(normalizeLoginIdentifier($("#login-email").value), $("#login-password").value);
   if (!success && !$("#login-screen").classList.contains("hidden")) {
     button.disabled = false;
     button.textContent = "Entrar no Prisma Estudos";
     message.className = "login-message is-error";
     message.textContent = "Login ou senha incorretos. Verifique os dados e tente novamente.";
   }
+}
+
+function normalizeLoginIdentifier(value) {
+  const login = String(value || "").trim().toLowerCase();
+  if (!login) return "";
+  if (login.includes("@")) return login;
+  return loginAliases[login] || `${login}@prismaestudos.local`;
 }
 
 function loadState() {

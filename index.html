@@ -42,10 +42,10 @@
         </div>
         <form id="login-form" class="login-form">
           <label class="login-field">
-            <span>Login ou e-mail</span>
+            <span>Usuário ou e-mail</span>
             <span class="input-shell">
               <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16v12H4z"/><path d="m4 7 8 6 8-6"/></svg>
-              <input id="login-email" type="email" value="ana@prismaestudos.local" placeholder="seu@email.com" autocomplete="username">
+              <input id="login-email" type="text" value="" placeholder="nat ou seu@email.com" autocomplete="username" inputmode="email">
             </span>
           </label>
           <label class="login-field">
@@ -63,16 +63,6 @@
           <div id="login-message" class="login-message hidden" role="status"></div>
           <button id="login-submit" type="submit" class="primary-button login-submit">Entrar no Prisma Estudos</button>
         </form>
-        <div class="demo-card">
-          <div>
-            <strong>Acesso de demonstração</strong>
-            <small>Modo demonstração disponível para testes.</small>
-          </div>
-          <div class="demo-users">
-            <button type="button" data-login="ana@prismaestudos.local" data-password="123456">Estudante Ana</button>
-            <button type="button" data-login="admin@prismaestudos.local" data-password="admin123">Administrador</button>
-          </div>
-        </div>
       </section>
       <aside class="login-art">
         <div class="login-float-chip chip-ready">Cronograma inteligente</div>
