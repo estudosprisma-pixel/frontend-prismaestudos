@@ -1,5 +1,4 @@
 ﻿const STORAGE_KEY = "prisma-estudos-state-v1";
-const TOKEN_KEY = "prisma-estudos-token";
 const API_BASE = window.PRISMA_API_BASE || (
   window.location.protocol === "file:" || ["localhost", "127.0.0.1"].includes(window.location.hostname)
     ? "http://localhost:3001/api"
@@ -14,19 +13,13 @@ const defaultActiveContestId = defaultContestIds[1] || defaultContestIds[0] || "
 const analystContest = editalCatalog.contests.find((contest) => contest.id === "analista-judiciario-area-administrativa");
 const technicianContest = editalCatalog.contests.find((contest) => contest.id === "tecnico-judiciario-area-administrativa");
 const legacyContestIds = new Set(["trt-sp-tecnico", "trt-sp-analista"]);
-const loginAliases = {
-  nat: "nat@prismaestudos.local",
-  "joao.guilherme": "joao.guilherme@prismaestudos.local",
-  joao: "joao.guilherme@prismaestudos.local",
-  admin: "admin@prismaestudos.local"
-};
 
 const seedState = {
   currentUserId: null,
   users: [
-    { id: "u-admin", name: "Marina Admin", email: "admin@prismaestudos.local", password: "admin123", role: "admin", status: "active", accessExpiresAt: null },
-    { id: "u-ana", name: "Ana Ribeiro", email: "ana@prismaestudos.local", password: "123456", role: "student", status: "active", accessExpiresAt: addDaysISO(30) },
-    { id: "u-lucas", name: "Lucas Lima", email: "lucas@prismaestudos.local", password: "123456", role: "student", status: "active", accessExpiresAt: addDaysISO(7) }
+    { id: "u-admin", name: "Marina Admin", email: "admin@prismaestudos.local", role: "admin", status: "active", accessExpiresAt: null },
+    { id: "u-ana", name: "Ana Ribeiro", email: "ana@prismaestudos.local", role: "student", status: "active", accessExpiresAt: addDaysISO(30) },
+    { id: "u-lucas", name: "Lucas Lima", email: "lucas@prismaestudos.local", role: "student", status: "active", accessExpiresAt: addDaysISO(7) }
   ],
   contests: [...editalCatalog.contests],
   profiles: {
@@ -129,7 +122,7 @@ let state = loadState();
 let timer = null;
 let activeTimerState = null;
 let focusAudio = null;
-let authToken = localStorage.getItem(TOKEN_KEY);
+let hasRemoteSession = false;
 let saveTimer = null;
 
 const pageTitles = {
@@ -255,8 +248,9 @@ const themePresets = {
 const $ = (selector) => document.querySelector(selector);
 
 document.addEventListener("DOMContentLoaded", async () => {
+  localStorage.removeItem("prisma-estudos-token");
   bindLogin();
-  if (authToken && state.currentUserId) {
+  if (state.currentUserId) {
     await syncStateFromApi();
   }
   if (state.currentUserId) enterApp();
@@ -287,20 +281,13 @@ async function submitLogin() {
   button.textContent = "Entrando...";
   message.className = "login-message is-loading";
   message.textContent = "Validando acesso ao Prisma Estudos...";
-  const success = await login(normalizeLoginIdentifier($("#login-email").value), $("#login-password").value);
+  const success = await login($("#login-email").value, $("#login-password").value);
   if (!success && !$("#login-screen").classList.contains("hidden")) {
     button.disabled = false;
     button.textContent = "Entrar no Prisma Estudos";
     message.className = "login-message is-error";
     message.textContent = "Login ou senha incorretos. Verifique os dados e tente novamente.";
   }
-}
-
-function normalizeLoginIdentifier(value) {
-  const login = String(value || "").trim().toLowerCase();
-  if (!login) return "";
-  if (login.includes("@")) return login;
-  return loginAliases[login] || `${login}@prismaestudos.local`;
 }
 
 function loadState() {
@@ -322,6 +309,7 @@ function mergeSeedCatalog(source) {
   merged.contests = mergeById(sourceContests, seedState.contests);
   merged.subjects = mergeById(source.subjects || [], seedState.subjects);
   merged.topics = mergeById(source.topics || [], seedState.topics);
+  merged.users = (merged.users || []).map(({ password, passwordHash, password_hash, ...user }) => user);
   Object.keys(merged.profiles || {}).forEach((userId) => {
     const profile = merged.profiles[userId] || {};
     const profileContests = (profile.contests?.length ? profile.contests : []).filter((contestId) => !legacyContestIds.has(contestId));
@@ -354,29 +342,7 @@ function saveState() {
 }
 
 async function login(email, password) {
-  const remoteLogin = await loginWithApi(email, password);
-  if (remoteLogin === true) return true;
-  if (remoteLogin === "failed") return false;
-
-  const user = state.users.find((item) => item.email === email && item.password === password && item.status === "active");
-  if (!user) {
-    showToast("Login ou senha inválidos.");
-    return false;
-  }
-  if (!isUserAccessActive(user)) {
-    showToast("Seu acesso expirou. Fale com o administrador para renovar.");
-    const message = $("#login-message");
-    if (message) {
-      message.className = "login-message is-error";
-      message.textContent = "Sua assinatura está inativa. Renove para continuar usando o Prisma Estudos.";
-    }
-    return false;
-  }
-  state.currentUserId = user.id;
-  state.route = user.role === "admin" ? "admin" : "dashboard";
-  saveState();
-  enterApp();
-  return true;
+  return loginWithApi(email, password);
 }
 
 async function loginWithApi(email, password) {
@@ -384,6 +350,7 @@ async function loginWithApi(email, password) {
     const response = await fetch(`${API_BASE}/auth/login`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
+      credentials: "include",
       body: JSON.stringify({ email, password })
     });
     if (!response.ok) {
@@ -392,8 +359,7 @@ async function loginWithApi(email, password) {
       return "failed";
     }
     const data = await response.json();
-    authToken = data.token;
-    localStorage.setItem(TOKEN_KEY, authToken);
+    hasRemoteSession = true;
     const localDailyEnergy = state.dailyEnergy;
     const energyPromptOpen = state.energyPromptOpen;
     state = normalizeRemoteState(data.state);
@@ -410,7 +376,7 @@ async function loginWithApi(email, password) {
 async function syncStateFromApi() {
   try {
     const response = await fetch(`${API_BASE}/state`, {
-      headers: { Authorization: `Bearer ${authToken}` }
+      credentials: "include"
     });
     if (!response.ok) throw new Error("Invalid session");
     const data = await response.json();
@@ -420,23 +386,23 @@ async function syncStateFromApi() {
     state.dailyEnergy = localDailyEnergy;
     state.energyPromptOpen = energyPromptOpen;
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    hasRemoteSession = true;
   } catch {
-    authToken = null;
-    localStorage.removeItem(TOKEN_KEY);
+    hasRemoteSession = false;
+    state.currentUserId = null;
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
   }
 }
 
 function queueRemoteSave() {
-  if (!authToken) return;
+  if (!hasRemoteSession) return;
   clearTimeout(saveTimer);
   saveTimer = setTimeout(async () => {
     try {
       const response = await fetch(`${API_BASE}/state`, {
         method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${authToken}`
-        },
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify({ state })
       });
       if (!response.ok) throw new Error("Save failed");
@@ -514,9 +480,9 @@ function renderNav() {
     button.innerHTML = `<span class="nav-icon">${iconSvg(icon)}</span><span>${label}</span>`;
     button.addEventListener("click", () => {
       if (route === "logout") {
+        fetch(`${API_BASE}/auth/logout`, { method: "POST", credentials: "include" }).catch(() => {});
         state.currentUserId = null;
-        authToken = null;
-        localStorage.removeItem(TOKEN_KEY);
+        hasRemoteSession = false;
         saveState();
         location.reload();
         return;
@@ -2198,14 +2164,14 @@ function deleteTopic(id) {
 }
 
 function openUserModal(userId = null) {
-  const user = userId ? state.users.find((item) => item.id === userId) : { name: "", email: "", password: "123456", role: "student", status: "active", accessExpiresAt: addDaysISO(30) };
+  const user = userId ? state.users.find((item) => item.id === userId) : { name: "", email: "", role: "student", status: "active", accessExpiresAt: addDaysISO(30) };
   openModal(`
     <div class="panel-header"><div><h3>${userId ? "Editar usuário" : "Novo usuário"}</h3><p>Controle administrativo de acesso e validade do login</p></div><button class="icon-button" data-close-modal>X</button></div>
     <form id="user-form" class="form-grid">
       <div class="grid cols-2">
         <label>Nome<input name="name" value="${user.name}" required></label>
         <label>Login<input name="email" type="email" value="${user.email}" required></label>
-        <label>Senha<input name="password" value="${userId ? "" : user.password}" ${userId ? 'placeholder="Preencha somente se quiser trocar"' : "required"}></label>
+        <label>Senha<input name="password" type="password" value="" ${userId ? 'placeholder="Preencha somente se quiser trocar"' : "required"} autocomplete="new-password"></label>
         <label>Perfil<select name="role">${options(["student", "admin"], user.role)}</select></label>
         <label>Status<select name="status">${options(["active", "inactive"], user.status)}</select></label>
         <label>Tempo de acesso
