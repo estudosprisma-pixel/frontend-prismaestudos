@@ -1,4 +1,12 @@
-﻿const STORAGE_KEY = "prisma-estudos-state-v1";
+const STORAGE_KEY = "prisma-estudos-state-v1";
+const LOCAL_SESSION_KEY = "prisma-estudos-local-session";
+const PAGE_MODE = document.body.dataset.page || (
+  window.location.pathname.startsWith("/login") ? "login" :
+  window.location.pathname.startsWith("/app") ? "app" :
+  "combined"
+);
+const APP_PATH = "/app/";
+const LOGIN_PATH = "/login/";
 const API_BASE = window.PRISMA_API_BASE || (
   window.location.protocol === "file:" || ["localhost", "127.0.0.1"].includes(window.location.hostname)
     ? "http://localhost:3001/api"
@@ -250,14 +258,38 @@ const $ = (selector) => document.querySelector(selector);
 document.addEventListener("DOMContentLoaded", async () => {
   localStorage.removeItem("prisma-estudos-token");
   bindLogin();
-  if (state.currentUserId) {
+  const hasLocalSession = localStorage.getItem(LOCAL_SESSION_KEY) === "true";
+
+  if (PAGE_MODE === "login") {
+    if (state.currentUserId && !hasLocalSession) {
+      await syncStateFromApi();
+    }
+    if (state.currentUserId) {
+      window.location.replace(APP_PATH);
+    }
+    return;
+  }
+
+  if (PAGE_MODE === "app") {
+    if (state.currentUserId && !hasLocalSession) {
+      await syncStateFromApi();
+    }
+    if (state.currentUserId) {
+      enterApp();
+    } else {
+      window.location.replace(LOGIN_PATH);
+    }
+    return;
+  }
+
+  if (state.currentUserId && !hasLocalSession) {
     await syncStateFromApi();
   }
   if (state.currentUserId) enterApp();
 });
 
 function bindLogin() {
-  $("#login-form").addEventListener("submit", async (event) => {
+  $("#login-form")?.addEventListener("submit", async (event) => {
     event.preventDefault();
     await submitLogin();
   });
@@ -270,8 +302,8 @@ function bindLogin() {
     $("#toggle-password").setAttribute("aria-label", isPassword ? "Ocultar senha" : "Mostrar senha");
   });
 
-  $("#menu-toggle").addEventListener("click", () => $(".sidebar").classList.toggle("open"));
-  $("#notification-button").addEventListener("click", renderNotifications);
+  $("#menu-toggle")?.addEventListener("click", () => $(".sidebar").classList.toggle("open"));
+  $("#notification-button")?.addEventListener("click", renderNotifications);
 }
 
 async function submitLogin() {
@@ -360,12 +392,17 @@ async function loginWithApi(email, password) {
     }
     const data = await response.json();
     hasRemoteSession = true;
+    localStorage.removeItem(LOCAL_SESSION_KEY);
     const localDailyEnergy = state.dailyEnergy;
     const energyPromptOpen = state.energyPromptOpen;
     state = normalizeRemoteState(data.state);
     state.dailyEnergy = localDailyEnergy;
     state.energyPromptOpen = energyPromptOpen;
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    if (PAGE_MODE === "login") {
+      window.location.assign(APP_PATH);
+      return true;
+    }
     enterApp();
     return true;
   } catch {
@@ -483,8 +520,9 @@ function renderNav() {
         fetch(`${API_BASE}/auth/logout`, { method: "POST", credentials: "include" }).catch(() => {});
         state.currentUserId = null;
         hasRemoteSession = false;
+        localStorage.removeItem(LOCAL_SESSION_KEY);
         saveState();
-        location.reload();
+        window.location.assign(LOGIN_PATH);
         return;
       }
       state.route = route;

@@ -1,158 +1,204 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="pt-BR">
   <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Prisma Estudos</title>
-    <meta name="description" content="Plataforma inteligente para organização de estudos, concursos públicos, vestibulares e desenvolvimento acadêmico.">
-    <meta name="keywords" content="prisma estudos, concursos públicos, cronograma de estudos, planejamento de estudos, revisões, organização acadêmica, produtividade">
-    <meta property="og:title" content="Prisma Estudos">
-    <meta property="og:description" content="Planejamento inteligente, organização completa e acompanhamento da sua evolução em um único lugar.">
-    <meta property="og:image" content="assets/prisma-estudos-logo.png">
-    <meta name="theme-color" content="#07111f">
-    <link rel="icon" type="image/png" href="assets/prisma-estudos-logo.png">
-    <link rel="apple-touch-icon" href="assets/prisma-estudos-logo.png">
-    <link rel="manifest" href="manifest.webmanifest">
-    <link rel="stylesheet" href="styles.css">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="Organize seus estudos, acompanhe seu desempenho e evolua com intelig&ecirc;ncia usando o Prisma Estudos."
+    />
+    <title>Prisma Estudos | Plataforma Inteligente para Estudar Melhor</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="./styles.css" />
   </head>
   <body>
-    <div id="login-screen" class="login-screen">
-      <section class="login-panel">
-        <div class="PrismaLogo PrismaLogo--login" aria-label="Prisma Estudos">
-          <span class="PrismaLogo__icon" aria-hidden="true">
-            <img src="assets/prisma-estudos-logo.png" alt="">
-          </span>
-          <span class="PrismaLogo__text">
-            <span class="PrismaLogo__word"><span>Prisma</span><span>Estudos</span></span>
-            <span class="PrismaLogo__tagline">Estratégia • Organização • Resultados</span>
-          </span>
+    <header class="site-header" data-header>
+      <nav class="nav-shell" aria-label="Navegacao principal">
+        <a class="brand" href="#inicio" aria-label="Prisma Estudos inicio">
+          <span class="brand-mark" aria-hidden="true"></span>
+          <span>Prisma Estudos</span>
+        </a>
+
+        <button class="menu-toggle" type="button" aria-label="Abrir menu" aria-expanded="false" data-menu-toggle>
+          <span></span>
+          <span></span>
+          <span></span>
+        </button>
+
+        <div class="nav-links" data-nav>
+          <a href="#recursos">Recursos</a>
+          <a href="#app">App</a>
+          <a href="#planos">Planos</a>
+          <a href="/login/">Entrar</a>
+          <a class="nav-cta" href="/cadastro/">Come&ccedil;ar agora</a>
         </div>
-        <div class="login-copy">
+      </nav>
+    </header>
+
+    <main>
+      <section class="hero" id="inicio">
+        <video
+          class="hero-video"
+          src="./assets/prisma-hero.mp4"
+          autoplay
+          muted
+          loop
+          playsinline
+          preload="metadata"
+          poster="./assets/prisma-poster.svg"
+          aria-hidden="true"
+        >
+          <source src="./assets/prisma-hero.mp4" type="video/mp4" />
+        </video>
+        <div class="hero-overlay" aria-hidden="true"></div>
+
+        <div class="hero-content reveal">
           <span class="eyebrow">Plataforma inteligente de estudos</span>
-          <h1>Transforme horas de estudo em resultados reais.</h1>
-          <p>Planejamento inteligente, organização completa e acompanhamento da sua evolução em um único lugar.</p>
-          <div class="benefit-list" aria-label="Benefícios do Prisma Estudos">
-            <span>Cronogramas inteligentes</span>
-            <span>Gestão de editais</span>
-            <span>Controle de revisões</span>
-            <span>Metas diárias</span>
-            <span>Estatísticas de desempenho</span>
-            <span>Evolução contínua</span>
+          <h1>Estude com estrat&eacute;gia. Evolua com intelig&ecirc;ncia.</h1>
+          <p>Organize sua rotina, acompanhe seu desempenho e acelere sua aprova&ccedil;&atilde;o com o Prisma Estudos.</p>
+          <div class="hero-actions">
+            <a class="button primary" href="/cadastro/">Come&ccedil;ar agora</a>
+            <a class="button secondary" href="#recursos">Ver recursos</a>
           </div>
         </div>
-        <form id="login-form" class="login-form" autocomplete="off">
-          <label class="login-field">
-            <span>Usuário ou e-mail</span>
-            <span class="input-shell">
-              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16v12H4z"/><path d="m4 7 8 6 8-6"/></svg>
-              <input id="login-email" type="text" value="" placeholder="usuário ou e-mail" autocomplete="off" inputmode="email">
-            </span>
-          </label>
-          <label class="login-field">
-            <span>Senha</span>
-            <span class="input-shell">
-              <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="10" width="14" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>
-              <input id="login-password" type="password" value="" placeholder="Sua senha" autocomplete="off">
-              <button id="toggle-password" class="password-toggle" type="button" aria-label="Mostrar senha">Mostrar</button>
-            </span>
-          </label>
-          <div class="login-options">
-            <label class="remember-option"><input id="remember-login" type="checkbox" checked> Manter conectado</label>
-            <a href="#" aria-label="Recuperar senha">Esqueci minha senha</a>
-          </div>
-          <div id="login-message" class="login-message hidden" role="status"></div>
-          <button id="login-submit" type="submit" class="primary-button login-submit">Entrar no Prisma Estudos</button>
-        </form>
       </section>
-      <aside class="login-art">
-        <div class="login-float-chip chip-ready">Cronograma inteligente</div>
-        <div class="login-float-chip chip-review">Revisões organizadas</div>
-        <div class="login-float-chip chip-focus">Evolução contínua</div>
-        <div class="login-mockup" aria-label="Prévia do Prisma Estudos">
-          <div class="mockup-header">
-            <div>
-              <span>Plano Hoje</span>
-              <strong>Português</strong>
-            </div>
-            <span class="status-pill status-em-andamento">72%</span>
-          </div>
-          <div class="login-dashboard-grid">
-            <article class="login-mini-card plan-card">
-              <span>Conteúdo</span>
-              <strong>Classes de palavras</strong>
-              <small>45 minutos sugeridos</small>
-              <div class="progress-track"><div class="progress-fill" style="--value:72%"></div></div>
-            </article>
-            <article class="login-mini-card energy-card-login">
-              <span>Metas diárias</span>
-              <strong>Alta precisão</strong>
-              <small>Melhor horário: 18h às 20h</small>
-            </article>
-            <article class="login-mini-card schedule-card-login">
-              <span>Cronograma</span>
-              <div class="login-week">
-                <b>Seg</b><b>Ter</b><b>Qua</b><b>Qui</b><b>Sex</b>
-                <i></i><i></i><i></i><i></i><i></i>
-              </div>
-            </article>
-            <article class="login-mini-card focus-card-login">
-              <span>Modo Foco</span>
-              <strong>25:00</strong>
-              <small>Música ativa</small>
-            </article>
-            <article class="login-mini-card heatmap-card-login">
-              <span>Desempenho</span>
-              <div class="login-heatmap" aria-hidden="true">
-                <i></i><i></i><i class="hot"></i><i></i><i class="warm"></i><i></i><i class="hot"></i><i></i>
-                <i class="warm"></i><i></i><i></i><i class="hot"></i><i></i><i class="warm"></i><i></i><i></i>
-              </div>
-            </article>
-          </div>
-        </div>
-      </aside>
-    </div>
 
-    <div id="app-shell" class="app-shell hidden">
-      <aside class="sidebar">
-        <div class="PrismaLogo PrismaLogo--app sidebar-brand" aria-label="Prisma Estudos">
-          <span class="PrismaLogo__icon" aria-hidden="true">
-            <img src="assets/prisma-estudos-logo.png" alt="">
-          </span>
-          <span class="PrismaLogo__text">
-            <span class="PrismaLogo__word"><span>Prisma</span><span>Estudos</span></span>
-            <span id="user-role-label" class="PrismaLogo__tagline">Estudante</span>
-          </span>
+      <section class="section benefits-section" id="recursos">
+        <div class="section-heading reveal">
+          <span class="eyebrow">Clareza para evoluir</span>
+          <h2>Menos improviso. Mais execu&ccedil;&atilde;o.</h2>
         </div>
-        <nav id="sidebar-nav" class="sidebar-nav"></nav>
-      </aside>
+        <div class="benefit-grid">
+          <article class="glass-card reveal">
+            <span class="icon-orb" aria-hidden="true">01</span>
+            <h3>Planejamento inteligente</h3>
+            <p>Monte sua rotina de estudos com clareza e foco.</p>
+          </article>
+          <article class="glass-card reveal">
+            <span class="icon-orb" aria-hidden="true">02</span>
+            <h3>Desempenho em tempo real</h3>
+            <p>Acompanhe sua evolu&ccedil;&atilde;o e saiba onde precisa melhorar.</p>
+          </article>
+          <article class="glass-card reveal">
+            <span class="icon-orb" aria-hidden="true">03</span>
+            <h3>Estudo com IA</h3>
+            <p>Receba sugest&otilde;es inteligentes para estudar melhor.</p>
+          </article>
+        </div>
+      </section>
 
-      <main class="main">
-        <header class="topbar">
-          <button id="menu-toggle" class="icon-button mobile-only" type="button" aria-label="Abrir menu">☰</button>
-          <div>
-            <span id="today-label" class="eyebrow"></span>
-            <h2 id="page-title">Dashboard</h2>
-          </div>
-          <div class="topbar-actions">
-            <button id="notification-button" class="icon-button" type="button" aria-label="Notificações">!</button>
-            <div class="user-chip">
-              <span id="user-avatar">A</span>
+      <section class="section app-section" id="app">
+        <div class="section-heading compact reveal">
+          <span class="eyebrow">Visao do app</span>
+          <h2>Um painel para decidir menos e estudar melhor.</h2>
+        </div>
+
+        <div class="dashboard-mockup reveal" aria-label="Mockup do dashboard Prisma Estudos">
+          <aside class="mock-sidebar">
+            <span class="brand-dot"></span>
+            <b>Prisma</b>
+            <i class="active"></i>
+            <i></i>
+            <i></i>
+            <i></i>
+          </aside>
+          <div class="mock-main">
+            <div class="mock-top">
               <div>
-                <strong id="user-name">Ana</strong>
-                <small id="user-email">ana@prismaestudos.local</small>
+                <span>Plano hoje</span>
+                <strong>An&aacute;lise inteligente da rotina</strong>
               </div>
+              <em>IA ativa</em>
+            </div>
+            <div class="mock-grid">
+              <article class="mock-card progress-card">
+                <span>Progresso</span>
+                <strong>76%</strong>
+                <div class="progress-line"><i></i></div>
+              </article>
+              <article class="mock-card">
+                <span>Metas</span>
+                <strong>4/5</strong>
+                <small>tarefas do dia</small>
+              </article>
+              <article class="mock-card">
+                <span>Simulados</span>
+                <strong>82%</strong>
+                <small>m&eacute;dia recente</small>
+              </article>
+              <article class="mock-card subject-card">
+                <span>Materias</span>
+                <strong>Portugues</strong>
+                <small>proxima prioridade</small>
+              </article>
+              <article class="mock-card ai-card">
+                <span>IA</span>
+                <strong>Revise Direito Constitucional hoje.</strong>
+              </article>
             </div>
           </div>
-        </header>
+        </div>
+      </section>
 
-        <section id="notifications" class="notifications hidden"></section>
-        <section id="view-root" class="view-root"></section>
-      </main>
-    </div>
+      <section class="section pricing-section" id="planos">
+        <div class="section-heading reveal">
+          <span class="eyebrow">Planos</span>
+          <h2>Escolha seu ritmo de evolu&ccedil;&atilde;o.</h2>
+        </div>
+        <div class="pricing-grid">
+          <article class="price-card reveal">
+            <h3>Mensal</h3>
+            <strong>R$ 24,90</strong>
+            <span>/mes</span>
+            <p>Para come&ccedil;ar com flexibilidade.</p>
+            <a class="button secondary" href="/cadastro/">Come&ccedil;ar</a>
+          </article>
+          <article class="price-card reveal">
+            <h3>Semestral</h3>
+            <strong>R$ 119,90</strong>
+            <span>R$ 20/mes</span>
+            <p>Const&acirc;ncia por mais tempo.</p>
+            <a class="button secondary" href="/cadastro/">Escolher plano</a>
+          </article>
+          <article class="price-card popular reveal">
+            <div class="plan-badge">Mais popular</div>
+            <h3>Anual</h3>
+            <strong>R$ 204,90</strong>
+            <span>R$ 17/mes</span>
+            <p>Melhor economia para evoluir o ano inteiro.</p>
+            <a class="button primary" href="/cadastro/">Garantir acesso</a>
+          </article>
+        </div>
+      </section>
 
-    <div id="modal-root" class="modal-root hidden" aria-live="polite"></div>
+      <section class="section final-cta" id="comecar">
+        <div class="cta-panel reveal">
+          <span class="eyebrow">Pronto para estudar com clareza?</span>
+          <h2>Comece sua evolu&ccedil;&atilde;o hoje.</h2>
+          <p>Transforme seus estudos em um processo mais inteligente, organizado e constante.</p>
+          <a class="button primary" href="/cadastro/">Come&ccedil;ar agora</a>
+        </div>
+      </section>
+    </main>
 
-    <script src="catalog.js"></script>
-    <script src="app.js"></script>
+    <footer class="site-footer">
+      <a class="brand" href="#inicio" aria-label="Prisma Estudos inicio">
+        <span class="brand-mark" aria-hidden="true"></span>
+        <span>Prisma Estudos</span>
+      </a>
+      <nav aria-label="Links do rodape">
+        <a href="#">Politica de Privacidade</a>
+        <a href="#">Termos de Uso</a>
+        <a href="mailto:contato@prismaestudos.com">Contato</a>
+      </nav>
+      <p>&copy; 2026 Prisma Estudos. Todos os direitos reservados.</p>
+    </footer>
+
+    <script src="./script.js"></script>
   </body>
 </html>

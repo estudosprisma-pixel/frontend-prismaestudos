@@ -1,0 +1,159 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Prisma Estudos</title>
+    <meta name="description" content="Plataforma inteligente para organização de estudos, concursos públicos, vestibulares e desenvolvimento acadêmico.">
+    <meta name="keywords" content="prisma estudos, concursos públicos, cronograma de estudos, planejamento de estudos, revisões, organização acadêmica, produtividade">
+    <meta property="og:title" content="Prisma Estudos">
+    <meta property="og:description" content="Planejamento inteligente, organização completa e acompanhamento da sua evolução em um único lugar.">
+    <meta property="og:image" content="../app/assets/prisma-estudos-logo.png">
+    <meta name="theme-color" content="#07111f">
+    <link rel="icon" type="image/png" href="../app/assets/prisma-estudos-logo.png">
+    <link rel="apple-touch-icon" href="../app/assets/prisma-estudos-logo.png">
+    <link rel="manifest" href="../app/manifest.webmanifest">
+    <link rel="stylesheet" href="../app/styles.css">
+  </head>
+  <body data-page="login">
+    <div id="login-screen" class="login-screen">
+      <section class="login-panel">
+        <div class="PrismaLogo PrismaLogo--login" aria-label="Prisma Estudos">
+          <span class="PrismaLogo__icon" aria-hidden="true">
+            <img src="../app/assets/prisma-estudos-logo.png" alt="">
+          </span>
+          <span class="PrismaLogo__text">
+            <span class="PrismaLogo__word"><span>Prisma</span><span>Estudos</span></span>
+            <span class="PrismaLogo__tagline">Estratégia • Organização • Resultados</span>
+          </span>
+        </div>
+        <div class="login-copy">
+          <span class="eyebrow">Plataforma inteligente de estudos</span>
+          <h1>Transforme horas de estudo em resultados reais.</h1>
+          <p>Planejamento inteligente, organização completa e acompanhamento da sua evolução em um único lugar.</p>
+          <div class="benefit-list" aria-label="Benefícios do Prisma Estudos">
+            <span>Cronogramas inteligentes</span>
+            <span>Gestão de editais</span>
+            <span>Controle de revisões</span>
+            <span>Metas diárias</span>
+            <span>Estatísticas de desempenho</span>
+            <span>Evolução contínua</span>
+          </div>
+        </div>
+        <form id="login-form" class="login-form" autocomplete="off">
+          <label class="login-field">
+            <span>Usuário ou e-mail</span>
+            <span class="input-shell">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16v12H4z"/><path d="m4 7 8 6 8-6"/></svg>
+              <input id="login-email" type="text" value="" placeholder="usuário ou e-mail" autocomplete="off" inputmode="email">
+            </span>
+          </label>
+          <label class="login-field">
+            <span>Senha</span>
+            <span class="input-shell">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="10" width="14" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>
+              <input id="login-password" type="password" value="" placeholder="Sua senha" autocomplete="off">
+              <button id="toggle-password" class="password-toggle" type="button" aria-label="Mostrar senha">Mostrar</button>
+            </span>
+          </label>
+          <div class="login-options">
+            <label class="remember-option"><input id="remember-login" type="checkbox" checked> Manter conectado</label>
+            <a href="#" aria-label="Recuperar senha">Esqueci minha senha</a>
+          </div>
+          <div id="login-message" class="login-message hidden" role="status"></div>
+          <button id="login-submit" type="submit" class="primary-button login-submit">Entrar no Prisma Estudos</button>
+        </form>
+      </section>
+      <aside class="login-art">
+        <div class="login-float-chip chip-ready">Cronograma inteligente</div>
+        <div class="login-float-chip chip-review">Revisões organizadas</div>
+        <div class="login-float-chip chip-focus">Evolução contínua</div>
+        <div class="login-mockup" aria-label="Prévia do Prisma Estudos">
+          <div class="mockup-header">
+            <div>
+              <span>Plano Hoje</span>
+              <strong>Português</strong>
+            </div>
+            <span class="status-pill status-em-andamento">72%</span>
+          </div>
+          <div class="login-dashboard-grid">
+            <article class="login-mini-card plan-card">
+              <span>Conteúdo</span>
+              <strong>Classes de palavras</strong>
+              <small>45 minutos sugeridos</small>
+              <div class="progress-track"><div class="progress-fill" style="--value:72%"></div></div>
+            </article>
+            <article class="login-mini-card energy-card-login">
+              <span>Metas diárias</span>
+              <strong>Alta precisão</strong>
+              <small>Melhor horário: 18h às 20h</small>
+            </article>
+            <article class="login-mini-card schedule-card-login">
+              <span>Cronograma</span>
+              <div class="login-week">
+                <b>Seg</b><b>Ter</b><b>Qua</b><b>Qui</b><b>Sex</b>
+                <i></i><i></i><i></i><i></i><i></i>
+              </div>
+            </article>
+            <article class="login-mini-card focus-card-login">
+              <span>Modo Foco</span>
+              <strong>25:00</strong>
+              <small>Música ativa</small>
+            </article>
+            <article class="login-mini-card heatmap-card-login">
+              <span>Desempenho</span>
+              <div class="login-heatmap" aria-hidden="true">
+                <i></i><i></i><i class="hot"></i><i></i><i class="warm"></i><i></i><i class="hot"></i><i></i>
+                <i class="warm"></i><i></i><i></i><i class="hot"></i><i></i><i class="warm"></i><i></i><i></i>
+              </div>
+            </article>
+          </div>
+        </div>
+      </aside>
+    </div>
+
+    <div id="app-shell" class="app-shell hidden">
+      <aside class="sidebar">
+        <div class="PrismaLogo PrismaLogo--app sidebar-brand" aria-label="Prisma Estudos">
+          <span class="PrismaLogo__icon" aria-hidden="true">
+            <img src="../app/assets/prisma-estudos-logo.png" alt="">
+          </span>
+          <span class="PrismaLogo__text">
+            <span class="PrismaLogo__word"><span>Prisma</span><span>Estudos</span></span>
+            <span id="user-role-label" class="PrismaLogo__tagline">Estudante</span>
+          </span>
+        </div>
+        <nav id="sidebar-nav" class="sidebar-nav"></nav>
+      </aside>
+
+      <main class="main">
+        <header class="topbar">
+          <button id="menu-toggle" class="icon-button mobile-only" type="button" aria-label="Abrir menu">☰</button>
+          <div>
+            <span id="today-label" class="eyebrow"></span>
+            <h2 id="page-title">Dashboard</h2>
+          </div>
+          <div class="topbar-actions">
+            <button id="notification-button" class="icon-button" type="button" aria-label="Notificações">!</button>
+            <div class="user-chip">
+              <span id="user-avatar">A</span>
+              <div>
+                <strong id="user-name">Ana</strong>
+                <small id="user-email">ana@prismaestudos.local</small>
+              </div>
+            </div>
+          </div>
+        </header>
+
+        <section id="notifications" class="notifications hidden"></section>
+        <section id="view-root" class="view-root"></section>
+      </main>
+    </div>
+
+    <div id="modal-root" class="modal-root hidden" aria-live="polite"></div>
+
+    <script src="../app/catalog.js"></script>
+    <script src="../app/app.js"></script>
+  </body>
+</html>
+

@@ -1,0 +1,6 @@
+/app /app/ 301
+/login /login/ 301
+/cadastro /cadastro/ 301
+/app/* /app/index.html 200
+/login/* /login/index.html 200
+/cadastro/* /cadastro/index.html 200

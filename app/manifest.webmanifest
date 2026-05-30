@@ -2,7 +2,7 @@
   "name": "Prisma Estudos",
   "short_name": "Prisma",
   "description": "Plataforma inteligente para organização de estudos, concursos públicos, vestibulares e desenvolvimento acadêmico.",
-  "start_url": ".",
+  "start_url": "/app/",
   "display": "standalone",
   "background_color": "#050b14",
   "theme_color": "#07111f",
@@ -15,7 +15,7 @@
     }
   ],
   "share_target": {
-    "action": ".",
+    "action": "/app/",
     "method": "GET",
     "params": {
       "title": "title",
