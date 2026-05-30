@@ -90,6 +90,32 @@
         line-height: 1.5;
       }
 
+      .signup-plan {
+        display: grid;
+        gap: 6px;
+        padding: 16px 18px;
+        border: 1px solid rgba(66, 211, 255, 0.18);
+        border-radius: 18px;
+        background: rgba(66, 211, 255, 0.08);
+      }
+
+      .signup-plan span {
+        color: rgba(245, 248, 255, 0.68);
+        font-size: 0.8rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+      }
+
+      .signup-plan strong {
+        font-size: 1.2rem;
+      }
+
+      .signup-plan small {
+        color: rgba(245, 248, 255, 0.74);
+        line-height: 1.5;
+      }
+
       .signup-message {
         min-height: 22px;
         color: #69e6ba;
@@ -133,6 +159,11 @@
 
       <section class="signup-form-panel">
         <form id="signup-form" class="signup-form">
+          <div class="signup-plan" aria-live="polite">
+            <span>Plano ativado</span>
+            <strong id="signup-plan-name">Mensal</strong>
+            <small id="signup-plan-description">Seu acesso sera liberado por 30 dias a partir de hoje.</small>
+          </div>
           <label class="signup-field">
             Nome completo
             <input id="signup-name" type="text" autocomplete="name" required />

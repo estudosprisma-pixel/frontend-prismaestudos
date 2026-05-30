@@ -313,12 +313,14 @@ async function submitLogin() {
   button.textContent = "Entrando...";
   message.className = "login-message is-loading";
   message.textContent = "Validando acesso ao Prisma Estudos...";
-  const success = await login($("#login-email").value, $("#login-password").value);
-  if (!success && !$("#login-screen").classList.contains("hidden")) {
+  const result = await login($("#login-email").value, $("#login-password").value);
+  if (result !== true && !$("#login-screen").classList.contains("hidden")) {
     button.disabled = false;
     button.textContent = "Entrar no Prisma Estudos";
     message.className = "login-message is-error";
-    message.textContent = "Login ou senha incorretos. Verifique os dados e tente novamente.";
+    message.textContent = typeof result === "string"
+      ? result
+      : "Login ou senha incorretos. Verifique os dados e tente novamente.";
   }
 }
 
@@ -387,8 +389,9 @@ async function loginWithApi(email, password) {
     });
     if (!response.ok) {
       const data = await response.json().catch(() => ({}));
-      showToast(data.message || "Login ou senha inválidos.");
-      return "failed";
+      const message = data.message || "Login ou senha inválidos.";
+      if (PAGE_MODE !== "login") showToast(message);
+      return message;
     }
     const data = await response.json();
     hasRemoteSession = true;
@@ -406,7 +409,7 @@ async function loginWithApi(email, password) {
     enterApp();
     return true;
   } catch {
-    return null;
+    return "Nao foi possivel conectar ao Prisma Estudos agora. Tente novamente em instantes.";
   }
 }
 
@@ -417,9 +420,11 @@ async function syncStateFromApi() {
     });
     if (!response.ok) throw new Error("Invalid session");
     const data = await response.json();
+    const route = state.route;
     const localDailyEnergy = state.dailyEnergy;
     const energyPromptOpen = state.energyPromptOpen;
     state = normalizeRemoteState(data.state);
+    state.route = route || state.route;
     state.dailyEnergy = localDailyEnergy;
     state.energyPromptOpen = energyPromptOpen;
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
