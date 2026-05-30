@@ -78,6 +78,16 @@ a {
 .brand-dot {
   width: 32px;
   height: 32px;
+}
+
+.brand-mark {
+  display: block;
+  object-fit: cover;
+  border-radius: 10px;
+  box-shadow: 0 0 30px rgba(38, 217, 255, 0.16);
+}
+
+.brand-dot {
   border: 1px solid rgba(255, 255, 255, 0.2);
   border-radius: 10px;
   background:
@@ -152,6 +162,7 @@ a {
   opacity: 0.82;
   filter: saturate(1.2) contrast(1.08) brightness(1.08);
   transform: scale(1.02);
+  animation: slow-float 16s ease-in-out infinite;
 }
 
 .hero-overlay {
@@ -168,6 +179,7 @@ a {
   z-index: 1;
   width: min(100%, var(--max));
   max-width: 100%;
+  animation: hero-fade-up 0.95s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
 .hero-content h1 {
@@ -252,6 +264,14 @@ a {
   padding: 88px 0;
 }
 
+#inicio,
+#recursos,
+#app,
+#planos,
+#comecar {
+  scroll-margin-top: 104px;
+}
+
 .section-heading {
   max-width: 720px;
   margin-bottom: 28px;
@@ -274,6 +294,22 @@ a {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 16px;
+}
+
+.pricing-section {
+  position: relative;
+}
+
+.pricing-section::before {
+  content: "";
+  position: absolute;
+  inset: 72px -4% 0;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 18% 26%, rgba(38, 217, 255, 0.13), transparent 24%),
+    radial-gradient(circle at 82% 20%, rgba(139, 92, 246, 0.16), transparent 22%);
+  filter: blur(28px);
 }
 
 .glass-card,
@@ -450,6 +486,35 @@ a {
   position: relative;
   display: flex;
   flex-direction: column;
+  gap: 10px;
+  overflow: hidden;
+  transition:
+    transform 0.28s ease,
+    border-color 0.28s ease,
+    box-shadow 0.28s ease,
+    background 0.28s ease;
+}
+
+.price-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(130deg, rgba(255, 255, 255, 0.16), transparent 28%, transparent 66%, rgba(38, 217, 255, 0.14)),
+    radial-gradient(circle at top right, rgba(38, 217, 255, 0.16), transparent 26%);
+  transition: opacity 0.28s ease;
+}
+
+.price-card:hover {
+  transform: translateY(-8px);
+  border-color: rgba(79, 141, 255, 0.34);
+  box-shadow: 0 30px 70px rgba(0, 0, 0, 0.45);
+}
+
+.price-card:hover::before {
+  opacity: 1;
 }
 
 .price-card.popular {
@@ -460,26 +525,102 @@ a {
     rgba(10, 17, 32, 0.82);
 }
 
+.price-card.popular:hover {
+  transform: translateY(-10px) scale(1.01);
+  border-color: rgba(38, 217, 255, 0.72);
+  box-shadow: 0 35px 90px rgba(24, 143, 210, 0.24);
+}
+
 .plan-badge {
   position: absolute;
   top: 18px;
   right: 18px;
+  animation: badge-pulse 2.8s ease-in-out infinite;
+}
+
+.plan-kicker {
+  display: inline-flex;
+  width: fit-content;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 12px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 999px;
+  color: #dbeafe;
+  background: rgba(255, 255, 255, 0.05);
+  font-size: 0.76rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.plan-kicker::before {
+  content: "";
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  background: linear-gradient(135deg, var(--cyan), var(--blue));
+  box-shadow: 0 0 14px rgba(38, 217, 255, 0.54);
 }
 
 .price-card strong {
   display: block;
-  margin-top: 6px;
+  margin-top: 2px;
   font-size: clamp(2rem, 4vw, 3rem);
+  line-height: 0.96;
 }
 
-.price-card > span {
+.price-row {
+  display: grid;
+  gap: 4px;
+}
+
+.price-unit {
   color: var(--cyan);
   font-weight: 900;
+  font-size: 1.02rem;
 }
 
 .price-card .button {
   width: 100%;
   margin-top: auto;
+}
+
+.plan-savings {
+  padding: 12px 14px;
+  border: 1px solid rgba(38, 217, 255, 0.18);
+  border-radius: 16px;
+  color: #d9faff;
+  background: rgba(38, 217, 255, 0.08);
+  font-size: 0.92rem;
+  line-height: 1.5;
+}
+
+.plan-features {
+  display: grid;
+  gap: 10px;
+  margin: 0 0 22px;
+  padding: 0;
+  list-style: none;
+}
+
+.plan-features li {
+  position: relative;
+  padding-left: 24px;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+.plan-features li::before {
+  content: "";
+  position: absolute;
+  top: 0.45rem;
+  left: 0;
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+  background: linear-gradient(135deg, var(--cyan), var(--blue), var(--violet));
+  box-shadow: 0 0 16px rgba(38, 217, 255, 0.24);
 }
 
 .cta-panel {
@@ -529,6 +670,54 @@ a {
   transform: translateY(0);
 }
 
+.benefit-grid .reveal:nth-child(1),
+.pricing-grid .reveal:nth-child(1) {
+  transition-delay: 0.04s;
+}
+
+.benefit-grid .reveal:nth-child(2),
+.pricing-grid .reveal:nth-child(2) {
+  transition-delay: 0.12s;
+}
+
+.benefit-grid .reveal:nth-child(3),
+.pricing-grid .reveal:nth-child(3) {
+  transition-delay: 0.2s;
+}
+
+@keyframes hero-fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(28px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes badge-pulse {
+  0%,
+  100% {
+    transform: translateY(0) scale(1);
+    box-shadow: 0 0 0 rgba(38, 217, 255, 0);
+  }
+  50% {
+    transform: translateY(-1px) scale(1.04);
+    box-shadow: 0 0 26px rgba(38, 217, 255, 0.16);
+  }
+}
+
+@keyframes slow-float {
+  0%,
+  100% {
+    transform: scale(1.02) translate3d(0, 0, 0);
+  }
+  50% {
+    transform: scale(1.045) translate3d(0, -10px, 0);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   html {
     scroll-behavior: auto;
@@ -536,12 +725,18 @@ a {
 
   .hero-video {
     opacity: 0.55;
+    animation: none;
   }
 
   .reveal {
     opacity: 1;
     transform: none;
     transition: none;
+  }
+
+  .hero-content,
+  .plan-badge {
+    animation: none;
   }
 }
 

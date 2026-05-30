@@ -7,6 +7,13 @@
       name="description"
       content="Organize seus estudos, acompanhe seu desempenho e evolua com intelig&ecirc;ncia usando o Prisma Estudos."
     />
+    <meta property="og:title" content="Prisma Estudos" />
+    <meta
+      property="og:description"
+      content="Organize seus estudos, acompanhe seu desempenho e evolua com intelig&ecirc;ncia usando o Prisma Estudos."
+    />
+    <meta property="og:image" content="./app/assets/prisma-estudos-logo.png" />
+    <meta name="theme-color" content="#07111f" />
     <title>Prisma Estudos | Plataforma Inteligente para Estudar Melhor</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -14,13 +21,15 @@
       href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap"
       rel="stylesheet"
     />
+    <link rel="icon" type="image/png" href="./app/assets/prisma-estudos-logo.png" />
+    <link rel="apple-touch-icon" href="./app/assets/prisma-estudos-logo.png" />
     <link rel="stylesheet" href="./styles.css" />
   </head>
   <body>
     <header class="site-header" data-header>
       <nav class="nav-shell" aria-label="Navegacao principal">
         <a class="brand" href="#inicio" aria-label="Prisma Estudos inicio">
-          <span class="brand-mark" aria-hidden="true"></span>
+          <img class="brand-mark" src="./app/assets/prisma-estudos-logo.png" alt="" aria-hidden="true" />
           <span>Prisma Estudos</span>
         </a>
 
@@ -152,25 +161,50 @@
         </div>
         <div class="pricing-grid">
           <article class="price-card reveal">
+            <span class="plan-kicker">Entrada leve</span>
             <h3>Mensal</h3>
-            <strong>R$ 24,90</strong>
-            <span>/mes</span>
+            <div class="price-row">
+              <strong>R$ 24,90</strong>
+              <span class="price-unit">/M&ecirc;s</span>
+            </div>
             <p>Para come&ccedil;ar com flexibilidade.</p>
+            <ul class="plan-features" aria-label="Beneficios do plano mensal">
+              <li>Acesso completo ao app</li>
+              <li>Rotina de estudos inteligente</li>
+              <li>Liberdade para testar no seu ritmo</li>
+            </ul>
             <a class="button secondary" href="/cadastro/">Come&ccedil;ar</a>
           </article>
           <article class="price-card reveal">
+            <span class="plan-kicker">Mais constancia</span>
             <h3>Semestral</h3>
-            <strong>R$ 119,90</strong>
-            <span>R$ 20/mes</span>
+            <div class="price-row">
+              <strong>R$ 119,90</strong>
+              <span class="price-unit">R$ 20/M&ecirc;s</span>
+            </div>
             <p>Const&acirc;ncia por mais tempo.</p>
+            <ul class="plan-features" aria-label="Beneficios do plano semestral">
+              <li>Melhor previsibilidade de rotina</li>
+              <li>Mais tempo para consolidar habitos</li>
+              <li>Economia em relacao ao mensal</li>
+            </ul>
             <a class="button secondary" href="/cadastro/">Escolher plano</a>
           </article>
           <article class="price-card popular reveal">
             <div class="plan-badge">Mais popular</div>
+            <span class="plan-kicker">Melhor custo-beneficio</span>
             <h3>Anual</h3>
-            <strong>R$ 204,90</strong>
-            <span>R$ 17/mes</span>
+            <div class="price-row">
+              <strong>R$ 204,90</strong>
+              <span class="price-unit">R$ 17/M&ecirc;s</span>
+            </div>
             <p>Melhor economia para evoluir o ano inteiro.</p>
+            <div class="plan-savings">Economize mais e mantenha seu plano ativo o ano todo.</div>
+            <ul class="plan-features" aria-label="Beneficios do plano anual">
+              <li>Menor valor mensal da oferta</li>
+              <li>Ideal para quem quer consistencia</li>
+              <li>Foco total na evolucao sem interrupcoes</li>
+            </ul>
             <a class="button primary" href="/cadastro/">Garantir acesso</a>
           </article>
         </div>
@@ -188,7 +222,7 @@
 
     <footer class="site-footer">
       <a class="brand" href="#inicio" aria-label="Prisma Estudos inicio">
-        <span class="brand-mark" aria-hidden="true"></span>
+        <img class="brand-mark" src="./app/assets/prisma-estudos-logo.png" alt="" aria-hidden="true" />
         <span>Prisma Estudos</span>
       </a>
       <nav aria-label="Links do rodape">
