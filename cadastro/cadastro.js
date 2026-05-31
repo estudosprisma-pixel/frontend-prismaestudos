@@ -10,10 +10,10 @@ const PLAN_CONFIG = {
     days: 30,
     description: "Seu acesso sera liberado por 30 dias a partir da ativacao."
   },
-  semestral: {
-    label: "Semestral",
-    days: 180,
-    description: "Seu acesso sera liberado por 180 dias a partir da ativacao."
+  trimestral: {
+    label: "Trimestral",
+    days: 90,
+    description: "Seu acesso sera liberado por 90 dias a partir da ativacao."
   },
   anual: {
     label: "Anual",
