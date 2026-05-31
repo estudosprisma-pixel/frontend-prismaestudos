@@ -396,9 +396,11 @@ async function loginWithApi(email, password) {
     const data = await response.json();
     hasRemoteSession = true;
     localStorage.removeItem(LOCAL_SESSION_KEY);
+    const localThemes = state.themes;
     const localDailyEnergy = state.dailyEnergy;
     const energyPromptOpen = state.energyPromptOpen;
     state = normalizeRemoteState(data.state);
+    state.themes = localThemes;
     state.dailyEnergy = localDailyEnergy;
     state.energyPromptOpen = energyPromptOpen;
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
@@ -421,10 +423,12 @@ async function syncStateFromApi() {
     if (!response.ok) throw new Error("Invalid session");
     const data = await response.json();
     const route = state.route;
+    const localThemes = state.themes;
     const localDailyEnergy = state.dailyEnergy;
     const energyPromptOpen = state.energyPromptOpen;
     state = normalizeRemoteState(data.state);
     state.route = route || state.route;
+    state.themes = localThemes;
     state.dailyEnergy = localDailyEnergy;
     state.energyPromptOpen = energyPromptOpen;
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
@@ -450,11 +454,13 @@ function queueRemoteSave() {
       if (!response.ok) throw new Error("Save failed");
       const data = await response.json();
       const route = state.route;
+      const localThemes = state.themes;
       const localDailyEnergy = state.dailyEnergy;
       const energyPromptOpen = state.energyPromptOpen;
       const activeTimers = state.activeTimers;
       state = normalizeRemoteState(data.state);
       state.route = route;
+      state.themes = localThemes;
       state.dailyEnergy = localDailyEnergy;
       state.energyPromptOpen = energyPromptOpen;
       state.activeTimers = activeTimers;
