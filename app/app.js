@@ -396,13 +396,8 @@ async function loginWithApi(email, password) {
     const data = await response.json();
     hasRemoteSession = true;
     localStorage.removeItem(LOCAL_SESSION_KEY);
-    const localThemes = state.themes;
-    const localDailyEnergy = state.dailyEnergy;
-    const energyPromptOpen = state.energyPromptOpen;
-    state = normalizeRemoteState(data.state);
-    state.themes = localThemes;
-    state.dailyEnergy = localDailyEnergy;
-    state.energyPromptOpen = energyPromptOpen;
+    const localState = state;
+    state = preserveLocalUiState(normalizeRemoteState(data.state), localState);
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
     if (PAGE_MODE === "login") {
       window.location.assign(APP_PATH);
@@ -423,14 +418,9 @@ async function syncStateFromApi() {
     if (!response.ok) throw new Error("Invalid session");
     const data = await response.json();
     const route = state.route;
-    const localThemes = state.themes;
-    const localDailyEnergy = state.dailyEnergy;
-    const energyPromptOpen = state.energyPromptOpen;
-    state = normalizeRemoteState(data.state);
+    const localState = state;
+    state = preserveLocalUiState(normalizeRemoteState(data.state), localState);
     state.route = route || state.route;
-    state.themes = localThemes;
-    state.dailyEnergy = localDailyEnergy;
-    state.energyPromptOpen = energyPromptOpen;
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
     hasRemoteSession = true;
   } catch {
@@ -454,16 +444,9 @@ function queueRemoteSave() {
       if (!response.ok) throw new Error("Save failed");
       const data = await response.json();
       const route = state.route;
-      const localThemes = state.themes;
-      const localDailyEnergy = state.dailyEnergy;
-      const energyPromptOpen = state.energyPromptOpen;
-      const activeTimers = state.activeTimers;
-      state = normalizeRemoteState(data.state);
+      const localState = state;
+      state = preserveLocalUiState(normalizeRemoteState(data.state), localState);
       state.route = route;
-      state.themes = localThemes;
-      state.dailyEnergy = localDailyEnergy;
-      state.energyPromptOpen = energyPromptOpen;
-      state.activeTimers = activeTimers;
       localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
     } catch {
       showToast("Backend indisponível. Alterações mantidas localmente.");
@@ -486,6 +469,35 @@ function normalizeRemoteState(remoteState) {
     };
   });
   return normalized;
+}
+
+function preserveLocalUiState(remoteState, localState) {
+  return {
+    ...remoteState,
+    userTopics: mergeTopicChecklistState(remoteState.userTopics, localState.userTopics),
+    themes: localState.themes,
+    dailyEnergy: localState.dailyEnergy,
+    energyPromptOpen: localState.energyPromptOpen,
+    activeTimers: localState.activeTimers,
+    syllabusActiveSubjectId: localState.syllabusActiveSubjectId
+  };
+}
+
+function mergeTopicChecklistState(remoteTopics = {}, localTopics = {}) {
+  const merged = structuredClone(remoteTopics || {});
+  Object.entries(localTopics || {}).forEach(([userId, topics]) => {
+    Object.entries(topics || {}).forEach(([topicId, localTopic]) => {
+      if (!localTopic) return;
+      merged[userId] ||= {};
+      merged[userId][topicId] ||= {};
+      ["theoryRead", "summaryDone", "exercisesDone"].forEach((field) => {
+        if (localTopic[field] !== undefined) {
+          merged[userId][topicId][field] = localTopic[field];
+        }
+      });
+    });
+  });
+  return merged;
 }
 
 function enterApp() {
@@ -1049,7 +1061,7 @@ function bindVerticalizedSyllabus(root, id) {
     });
   });
   root.querySelectorAll("[data-syllabus-field]").forEach((button) => {
-    button.addEventListener("click", () => toggleTopicField(id, button.dataset.topic, button.dataset.syllabusField));
+    button.addEventListener("click", () => toggleTopicField(id, button.dataset.topic, button.dataset.syllabusField, button));
   });
 }
 
@@ -2431,6 +2443,7 @@ function initializeUserTopics(id) {
     const topics = topicsForSubject(subject.id).sort((a, b) => a.order - b.order);
     topics.forEach((topic, index) => {
       state.userTopics[id][topic.id] ||= { status: "pendente", progress: 0, unlocked: index === 0, completedAt: null };
+      syncCompletedTopicChecklist(state.userTopics[id][topic.id]);
     });
   });
 }
@@ -2438,6 +2451,15 @@ function initializeUserTopics(id) {
 function ensureUserTopic(id, topicId) {
   state.userTopics[id] ||= {};
   state.userTopics[id][topicId] ||= { status: "pendente", progress: 0, unlocked: true, completedAt: null };
+  syncCompletedTopicChecklist(state.userTopics[id][topicId]);
+}
+
+function syncCompletedTopicChecklist(userTopic) {
+  if (userTopic.status !== "concluido") return;
+  userTopic.theoryRead = true;
+  userTopic.summaryDone = true;
+  userTopic.exercisesDone = true;
+  userTopic.progress = 100;
 }
 
 function unlockNextTopic(id, topic) {
@@ -2919,12 +2941,15 @@ function subjectProgress(id, subjectId) {
   return { completed, total, percent: Math.round((completed / total) * 100) };
 }
 
-function toggleTopicField(userId, topicId, field) {
+function toggleTopicField(userId, topicId, field, control = null) {
   ensureUserTopic(userId, topicId);
   state.userTopics[userId][topicId][field] = !state.userTopics[userId][topicId][field];
   state.userTopics[userId][topicId].progress = topicChecklistProgress(state.userTopics[userId][topicId]);
+  control?.classList.toggle("done", Boolean(state.userTopics[userId][topicId][field]));
+  const row = control?.closest("tr");
+  const progressPill = row?.querySelector("td:last-child .status-pill");
+  if (progressPill) progressPill.textContent = `${state.userTopics[userId][topicId].progress}%`;
   saveState();
-  render();
 }
 
 function toggleTopicSelection(userId, topicId, selected) {
