@@ -1085,16 +1085,68 @@ input:focus, select:focus, textarea:focus {
   font-weight: 900;
 }
 
+.daily-action-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.daily-card {
+  overflow: hidden;
+  display: grid;
+  grid-template-rows: auto 1fr;
+  min-height: 320px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: rgba(255, 255, 255, 0.035);
+  box-shadow: var(--shadow-soft);
+}
+
+.daily-card .panel-header {
+  margin: -1px -1px 0;
+  padding: 18px 20px;
+  border-radius: var(--radius) var(--radius) 0 0;
+  color: #f8fafc;
+  text-align: center;
+}
+
+.daily-card .panel-header h3 {
+  margin: 0;
+  font-size: 1.35rem;
+}
+
+.daily-card .panel-header p {
+  margin: 4px 0 0;
+  color: rgba(248, 250, 252, 0.78);
+}
+
+.daily-card-study .panel-header {
+  background: linear-gradient(135deg, #087a51, #0f513b);
+}
+
+.daily-card-review .panel-header {
+  background: linear-gradient(135deg, #1d4f91, #1d3368);
+}
+
+.daily-card-study {
+  border-color: color-mix(in srgb, #10b981, transparent 62%);
+}
+
+.daily-card-review {
+  border-color: color-mix(in srgb, #60a5fa, transparent 62%);
+}
+
 .study-focus-card {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
   gap: 16px;
   align-items: start;
+  padding: 18px;
 }
 
 .study-lines {
   display: grid;
-  gap: 12px;
+  gap: 10px;
 }
 
 .study-lines strong {
@@ -1105,9 +1157,26 @@ input:focus, select:focus, textarea:focus {
   overflow-wrap: anywhere;
 }
 
+.study-quick-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.study-quick-meta span {
+  min-height: 28px;
+  padding: 6px 9px;
+  border: 1px solid color-mix(in srgb, var(--primary), transparent 72%);
+  border-radius: 999px;
+  color: var(--muted);
+  background: rgba(255, 255, 255, 0.04);
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+
 .study-focus-card .actions {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
 .study-focus-card .actions button,
@@ -1122,6 +1191,43 @@ input:focus, select:focus, textarea:focus {
 .review-stack, .insight-list {
   display: grid;
   gap: 14px;
+}
+
+.daily-review-list {
+  display: grid;
+  gap: 10px;
+  padding: 18px;
+}
+
+.daily-review-item {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: center;
+  padding: 14px;
+  border: 1px solid color-mix(in srgb, #60a5fa, transparent 76%);
+  border-radius: calc(var(--radius) - 2px);
+  background: rgba(255, 255, 255, 0.035);
+}
+
+.daily-review-item strong,
+.daily-review-item small {
+  display: block;
+  overflow-wrap: anywhere;
+}
+
+.daily-review-item small {
+  margin-top: 3px;
+  color: var(--muted);
+}
+
+.daily-review-item .actions {
+  display: flex;
+  gap: 8px;
+}
+
+.daily-review-item .actions button {
+  min-width: 104px;
 }
 
 .review-board {
@@ -2800,7 +2906,7 @@ body.density-comfortable {
 }
 
 @media (max-width: 860px) {
-  .login-screen, .app-shell, .hero-strip, .plan-hero, .schedule-header, .study-focus-card, .contest-grid, .grid.cols-2, .grid.cols-3, .grid.cols-4, .review-board {
+  .login-screen, .app-shell, .hero-strip, .plan-hero, .schedule-header, .daily-action-grid, .study-focus-card, .contest-grid, .grid.cols-2, .grid.cols-3, .grid.cols-4, .review-board {
     grid-template-columns: 1fr;
   }
 
@@ -2892,6 +2998,19 @@ body.density-comfortable {
   }
 
   .review-row .actions button {
+    width: 100%;
+  }
+
+  .daily-review-item {
+    grid-template-columns: 1fr;
+  }
+
+  .daily-review-item .actions {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  .daily-review-item .actions button {
     width: 100%;
   }
 }

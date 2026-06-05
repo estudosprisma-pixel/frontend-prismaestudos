@@ -1059,6 +1059,7 @@ function renderSchedule() {
   const progress = contestProgress(id, contest);
   const study = nextStudy(id);
   const buckets = reviewBuckets(id);
+  const dueReviews = [...buckets.overdue, ...buckets.today];
   return htmlElement(`
     <div class="grid">
       <section class="schedule-header">
@@ -1073,38 +1074,36 @@ function renderSchedule() {
         </div>
       </section>
 
-      <section class="grid cols-2">
-      <section class="panel">
+      <section class="daily-action-grid">
+      <section class="daily-card daily-card-study">
         <div class="panel-header">
-          <div><h3>Estudo do Dia</h3><p>Próximo conteúdo escolhido automaticamente</p></div>
+          <div><h3>Estudo do Dia</h3><p>${study ? "Você tem 1 sessão de estudo programada para hoje." : "Seu estudo principal está em dia."}</p></div>
           <span class="status-pill status-${study?.status || "pendente"}">${statusLabel(study?.status || "pendente")}</span>
         </div>
         ${study ? `
           <div class="study-focus-card">
             <div class="study-lines">
-              <span class="tag">Automático</span>
-              <div><small>Matéria</small><strong>${subjectById(study.subjectId).name}</strong></div>
-              <div><small>Conteúdo</small><strong>${study.title}</strong></div>
-              <div><small>Tempo sugerido</small><strong>${study.suggestedMinutes} minutos</strong></div>
-              <div><small>Progresso atual</small><strong>${study.progress}%</strong></div>
+              <span class="tag">Próximo bloco</span>
+              <div><small>${subjectById(study.subjectId).name}</small><strong>${study.title}</strong></div>
+              <div class="study-quick-meta"><span>${study.suggestedMinutes} min</span><span>${study.progress}% concluído</span></div>
               <div class="progress-track"><div class="progress-fill" style="--value:${study.progress}%"></div></div>
             </div>
             <div class="actions">
-              <button class="primary-button" data-action="start-study" data-topic="${study.id}">${iconSvg("calendar-days")} Iniciar estudo</button>
-              <button class="secondary-button" data-action="start-study" data-topic="${study.id}">Continuar</button>
-              <button class="ghost-button" data-action="finish-direct" data-topic="${study.id}">Finalizar</button>
+              <button class="primary-button" data-action="start-study" data-topic="${study.id}">${iconSvg("timer")} Iniciar</button>
+              <button class="ghost-button" data-action="finish-direct" data-topic="${study.id}">Marcar feito</button>
             </div>
           </div>
         ` : emptyState("Plano em dia", "Nenhum tópico pendente para as matérias selecionadas. Você pode revisar conteúdos ou manter o ritmo amanhã.", "calendar-days")}
       </section>
 
-      <section class="panel">
+      <section class="daily-card daily-card-review">
         <div class="panel-header">
-          <div><h3>Revisões do Dia</h3><p>Somente as revisões marcadas para hoje aparecem aqui.</p></div>
-          <span class="tag">${buckets.today.length} hoje</span>
+          <div><h3>Revisão do Dia</h3><p>Você tem ${dueReviews.length} revisão(ões) para fazer agora.</p></div>
+          <span class="tag">${dueReviews.length} agora</span>
         </div>
-        <div class="review-stack">
-          ${reviewBucketSection("Hoje", buckets.today, "Nenhuma revisão marcada para hoje. Você pode focar no estudo principal.")}
+        <div class="daily-review-list">
+          ${dueReviews.length ? dueReviews.slice(0, 4).map(scheduleReviewItem).join("") : emptyState("Sem revisões", "Você pode focar no estudo principal.", "refresh-cw")}
+          ${dueReviews.length > 4 ? `<button class="secondary-button" data-route="reviews">Visualizar todas as revisões</button>` : ""}
         </div>
       </section>
       </section>
@@ -1246,9 +1245,35 @@ function reviewBucketSection(label, reviews, emptyMessage = "Nada por aqui.") {
   `;
 }
 
+function scheduleReviewItem(review) {
+  const isNewStyle = Boolean(review.title);
+  const subjectName = isNewStyle ? review.subject : (subjectById(review.subjectId)?.name || "Revisão");
+  const topicTitle = isNewStyle ? (review.topic || review.title) : (topicById(review.topicId)?.title || "Tópico");
+  const canRestart = !isNewStyle && review.topicId;
+  return `
+    <article class="daily-review-item">
+      <div>
+        <strong>${topicTitle}</strong>
+        <small>${subjectName}</small>
+      </div>
+      <div class="actions">
+        ${canRestart ? `<button class="secondary-button" data-start-review="${review.id}">${iconSvg("refresh-cw")} Revisar</button>` : ""}
+        <button class="primary-button" data-done-review="${review.id}">${iconSvg("shield-check")} Feita</button>
+      </div>
+    </article>
+  `;
+}
+
 function bindScheduleActions(root) {
   root.querySelectorAll("[data-open-contest]").forEach((button) => {
     button.addEventListener("click", () => setActiveContest(studentId(), button.dataset.openContest));
+  });
+  root.querySelectorAll("[data-route]").forEach((button) => {
+    button.addEventListener("click", () => {
+      state.route = button.dataset.route;
+      saveState();
+      render();
+    });
   });
   root.querySelectorAll("[data-action='start-study']").forEach((button) => {
     button.addEventListener("click", () => openTimer(button.dataset.topic, false));
