@@ -2292,7 +2292,7 @@ function finalizeStudy(topicId, result, studiedMinutes, isReview) {
   const id = studentId();
   const topic = topicById(topicId);
   let snapshotKey = null;
-  if (!isReview && result === "concluido") {
+  if (!isReview && ["concluido", "parcial"].includes(result)) {
     snapshotKey = createFinishStudySnapshot(id, topicId);
   }
   ensureUserTopic(id, topicId);
@@ -2329,27 +2329,34 @@ function finalizeStudy(topicId, result, studiedMinutes, isReview) {
     closeModal();
     render();
   }
-  if (result === "parcial") openPartialChoice(topicId);
+  if (result === "parcial") openPartialChoice(topicId, { studiedMinutes, isReview, snapshotKey });
 }
 
-function openPartialChoice(topicId) {
+function openPartialChoice(topicId, context = {}) {
   openModal(`
     <div class="panel-header"><div><h3>Progresso parcial salvo</h3><p>Defina como o cronograma deve seguir</p></div></div>
     <div class="grid">
       <button class="primary-button" id="partial-continue">Continuar no próximo estudo</button>
       <button class="secondary-button" id="partial-advance">Avançar mesmo assim</button>
+      <button class="ghost-button" id="partial-back" type="button">Voltar</button>
     </div>
   `, (modal) => {
     modal.querySelector("#partial-continue").addEventListener("click", () => {
+      if (context.snapshotKey) delete finishStudySnapshots[context.snapshotKey];
       closeModal();
       showToast("O tópico permanece como próximo estudo.");
       render();
     });
     modal.querySelector("#partial-advance").addEventListener("click", () => {
+      if (context.snapshotKey) delete finishStudySnapshots[context.snapshotKey];
       unlockNextTopic(studentId(), topicById(topicId));
       closeModal();
       showToast("Próximo tópico liberado.");
       render();
+    });
+    modal.querySelector("#partial-back").addEventListener("click", () => {
+      if (context.snapshotKey) restoreFinishStudySnapshot(context.snapshotKey);
+      openFinishStudy(topicId, context.studiedMinutes, context.isReview);
     });
   });
 }
