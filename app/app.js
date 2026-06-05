@@ -1036,7 +1036,7 @@ function syllabusRow(id, topic) {
   const reviewsDone = reviewsFor(id).filter((review) => review.topicId === topic.id && review.status !== "pendente").length;
   return `
     <tr>
-      <td><strong>${topic.title}</strong><small>${topic.suggestedMinutes} min</small></td>
+      <td><strong>${topic.title}</strong></td>
       <td><button class="icon-button syllabus-start-button" data-action="start-study" data-topic="${topic.id}" title="Iniciar estudo">${iconSvg("timer")}</button></td>
       <td class="theory-cell"><button class="mini-check ${userTopic.theoryRead ? "done" : ""}" data-syllabus-field="theoryRead" data-topic="${topic.id}" aria-label="Teoria lida"></button></td>
       ${[1, 2, 3, 4, 5, 6].map((item) => `<td class="review-cell"><span class="mini-check ${reviewsDone >= item ? "done" : ""}"></span></td>`).join("")}
@@ -1171,7 +1171,6 @@ function topicSelector(subject, subjectTopics, selectedTopics, id) {
               <input type="checkbox" data-toggle-topic-selection="${topic.id}" ${selectedTopics.has(topic.id) ? "checked" : ""}>
               <span>
                 <strong>${topic.order}. ${topic.title}</strong>
-                <small>${topic.suggestedMinutes} min · ${statusLabel(userTopic.status)} · ${userTopic.progress || 0}%</small>
               </span>
             </label>
           `;
