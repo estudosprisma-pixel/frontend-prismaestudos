@@ -923,19 +923,48 @@ input:focus, select:focus, textarea:focus {
 }
 
 .score-ring {
-  width: 150px;
-  min-width: 150px;
+  width: 164px;
+  min-width: 164px;
   aspect-ratio: 1;
   place-items: center;
   text-align: center;
   border-radius: 50%;
   background:
-    radial-gradient(circle, var(--panel) 0 61%, transparent 62%),
-    conic-gradient(from 0deg, color-mix(in srgb, var(--card-soft), white 8%) calc((100 - var(--score, 0)) * 1%), var(--primary) 0);
+    radial-gradient(circle, var(--panel) 0 57%, color-mix(in srgb, var(--line), transparent 55%) 57.5%, transparent 59%),
+    conic-gradient(from -90deg, var(--primary) calc(var(--score, 0) * 1%), color-mix(in srgb, var(--card-soft), white 4%) 0);
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--primary), transparent 68%),
+    0 8px 28px rgba(0, 0, 0, 0.42),
+    0 0 36px color-mix(in srgb, var(--primary), transparent 86%);
+  transition: box-shadow 0.3s ease;
+}
+
+.score-ring:hover {
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--primary), transparent 50%),
+    0 10px 34px rgba(0, 0, 0, 0.48),
+    0 0 48px color-mix(in srgb, var(--primary), transparent 76%);
 }
 
 .score-ring strong {
-  font-size: 2rem;
+  display: block;
+  font-size: 1.85rem;
+  font-weight: 800;
+  background: linear-gradient(135deg, var(--primary) 20%, var(--secondary));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  line-height: 1;
+}
+
+.score-ring small {
+  display: block;
+  font-size: 0.67rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
+  color: var(--muted);
+  margin-top: 4px;
 }
 
 .contest-grid {

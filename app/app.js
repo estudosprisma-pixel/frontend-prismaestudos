@@ -132,6 +132,18 @@ let activeTimerState = null;
 let focusAudio = null;
 let hasRemoteSession = false;
 let saveTimer = null;
+let studyReviews = [];
+let studyReviewsLoaded = false;
+let userPreferences = {
+  theme: "dark",
+  accentColor: "blue",
+  studyGoal: "",
+  dailyStudyMinutes: 60,
+  preferredSubjects: [],
+  notificationsEnabled: true,
+  soundEnabled: true,
+  layoutMode: "default"
+};
 
 const pageTitles = {
   dashboard: "Seu Plano Hoje",
@@ -454,6 +466,91 @@ function queueRemoteSave() {
   }, 450);
 }
 
+// ── User Preferences API helpers ──────────────────────────────────────────────
+
+async function loadUserPreferences() {
+  if (!hasRemoteSession) return;
+  try {
+    const response = await fetch(`${API_BASE}/preferences`, { credentials: "include" });
+    if (!response.ok) return;
+    const data = await response.json();
+    if (data.preferences) userPreferences = { ...userPreferences, ...data.preferences };
+  } catch {
+    // silently keep defaults
+  }
+}
+
+async function saveUserPreferences(data) {
+  const r = await fetch(`${API_BASE}/preferences`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    credentials: "include",
+    body: JSON.stringify(data)
+  });
+  if (!r.ok) throw new Error(((await r.json().catch(() => ({}))).message) || "Erro ao salvar preferências.");
+  const result = await r.json();
+  if (result.preferences) userPreferences = { ...userPreferences, ...result.preferences };
+  return userPreferences;
+}
+
+function applyUserPreferences() {
+  const { layoutMode, notificationsEnabled, soundEnabled } = userPreferences;
+  document.body.classList.toggle("density-compact", layoutMode === "compact");
+  document.body.classList.toggle("density-comfortable", layoutMode === "comfortable");
+  if (layoutMode === "default") {
+    document.body.classList.remove("density-compact", "density-comfortable");
+  }
+  applyUserPreferences._notificationsEnabled = notificationsEnabled !== false;
+  applyUserPreferences._soundEnabled = soundEnabled !== false;
+}
+
+// ── Study Reviews API helpers ─────────────────────────────────────────────────
+
+async function loadStudyReviews() {
+  if (!hasRemoteSession) return;
+  try {
+    const response = await fetch(`${API_BASE}/reviews`, { credentials: "include" });
+    if (!response.ok) return;
+    studyReviews = (await response.json()).reviews || [];
+  } catch {
+    // silently keep existing data
+  }
+  studyReviewsLoaded = true;
+}
+
+async function apiCreateReview(data) {
+  const r = await fetch(`${API_BASE}/reviews`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    credentials: "include",
+    body: JSON.stringify(data)
+  });
+  if (!r.ok) throw new Error(((await r.json().catch(() => ({}))).message) || "Erro ao criar revisão.");
+  return (await r.json()).review;
+}
+
+async function apiUpdateReview(id, data) {
+  const r = await fetch(`${API_BASE}/reviews/${id}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    credentials: "include",
+    body: JSON.stringify(data)
+  });
+  if (!r.ok) throw new Error(((await r.json().catch(() => ({}))).message) || "Erro ao atualizar revisão.");
+  return (await r.json()).review;
+}
+
+async function apiDeleteReview(id) {
+  const r = await fetch(`${API_BASE}/reviews/${id}`, {
+    method: "DELETE",
+    credentials: "include"
+  });
+  if (!r.ok) throw new Error(((await r.json().catch(() => ({}))).message) || "Erro ao apagar revisão.");
+  return true;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+
 function normalizeRemoteState(remoteState) {
   const normalized = mergeSeedCatalog({
     ...remoteState,
@@ -510,6 +607,7 @@ function enterApp() {
   $("#user-role-label").textContent = user.role === "admin" ? "Administrador" : "Estudante";
   $("#today-label").textContent = new Intl.DateTimeFormat("pt-BR", { weekday: "long", day: "2-digit", month: "long" }).format(today);
   applyTheme();
+  loadUserPreferences().then(applyUserPreferences).catch(() => {});
   renderNav();
   render();
   setTimeout(showDailyMotivation, 650);
@@ -551,6 +649,10 @@ function renderNav() {
       state.route = route;
       saveState();
       $(".sidebar").classList.remove("open");
+      if (route === "reviews" && hasRemoteSession) {
+        studyReviewsLoaded = false;
+        loadStudyReviews().then(() => render());
+      }
       render();
     });
     nav.appendChild(button);
@@ -1182,32 +1284,44 @@ function topicSelector(subject, subjectTopics, selectedTopics, id) {
 
 function renderReviews() {
   const id = studentId();
-  const reviews = reviewsFor(id).sort((a, b) => a.dueDate.localeCompare(b.dueDate));
-  const buckets = reviewBuckets(id);
-  const done = reviews.filter((review) => review.status !== "pendente");
-  const pending = [...buckets.overdue, ...buckets.today, ...buckets.upcoming];
+
+  // Revisões do estado (sistema antigo, para compatibilidade)
+  const stateReviews = studyReviewsLoaded ? [] : reviewsFor(id).sort((a, b) => a.dueDate.localeCompare(b.dueDate));
+
+  // Mesclamos API reviews + state reviews sem duplicatas (API tem prioridade)
+  const apiIds = new Set(studyReviews.map((r) => r.id));
+  const allReviews = [...studyReviews, ...stateReviews.filter((r) => !apiIds.has(r.id))];
+
+  const pending = allReviews.filter((r) => r.status === "pendente");
+  const done = allReviews.filter((r) => r.status !== "pendente");
+  const dueOf = (r) => r.nextReviewDate || r.dueDate || isoToday;
+  const overdue = pending.filter((r) => dueOf(r) < isoToday).sort((a, b) => dueOf(a).localeCompare(dueOf(b)));
+  const todayItems = pending.filter((r) => dueOf(r) === isoToday);
+  const upcoming = pending.filter((r) => dueOf(r) > isoToday).sort((a, b) => dueOf(a).localeCompare(dueOf(b)));
+
+  const loadingHint = hasRemoteSession && !studyReviewsLoaded
+    ? `<p style="text-align:center;padding:8px;opacity:.7">Carregando revisões do servidor...</p>`
+    : "";
+
   return htmlElement(`
     <section class="panel">
+      ${loadingHint}
       <div class="panel-header"><div><h3>Revisões Inteligentes</h3><p>Veja tudo que está pendente, adiante revisões futuras quando quiser e mantenha sua memória ativa.</p></div></div>
       <section class="grid cols-4">
         ${metric("Para fazer", pending.length)}
-        ${metric("Atrasadas", buckets.overdue.length)}
-        ${metric("Agendadas", buckets.upcoming.length)}
+        ${metric("Atrasadas", overdue.length)}
+        ${metric("Agendadas", upcoming.length)}
         ${metric("Feitas", done.length)}
       </section>
       <div class="review-board" style="margin-top:16px">
-        ${reviewBucketSection("Atrasadas", buckets.overdue, "Nenhuma revisão atrasada agora.")}
-        ${reviewBucketSection("Hoje", buckets.today, "Nenhuma revisão marcada para hoje. Você pode focar no estudo principal.")}
-        ${reviewBucketSection("Agendadas", buckets.upcoming, "Nenhuma revisão futura agendada no momento.")}
+        ${reviewBucketSection("Atrasadas", overdue, "Nenhuma revisão atrasada agora.")}
+        ${reviewBucketSection("Hoje", todayItems, "Nenhuma revisão marcada para hoje. Você pode focar no estudo principal.")}
+        ${reviewBucketSection("Agendadas", upcoming, "Nenhuma revisão futura agendada no momento.")}
       </div>
       <details class="subject-details review-done-details" ${done.length ? "" : "open"}>
         <summary><strong>Revisões concluídas</strong><span>${done.length} feita(s)</span></summary>
         <div class="compact-list">${done.length ? done.map(reviewCard).join("") : emptyState("Sem revisões concluídas", "As revisões marcadas como feitas aparecerão aqui.", "shield-check")}</div>
       </details>
-      <div class="compact-accordion" style="margin-top:16px">
-        <div class="bucket-title"><span>Por matéria</span><strong>${pending.length}</strong></div>
-        ${reviewsBySubject(id, pending) || emptyState("Nada pendente", "Você não tem revisões pendentes para fazer.", "refresh-cw")}
-      </div>
     </section>
   `, bindReviewButtons);
 }
@@ -1227,20 +1341,25 @@ function reviewsBySubject(id, reviews) {
 }
 
 function reviewCard(review) {
-  const subject = subjectById(review.subjectId);
-  const topic = topicById(review.topicId);
-  const isUpcoming = review.status === "pendente" && review.dueDate > isoToday;
-  const isOverdue = review.status === "pendente" && review.dueDate < isoToday;
+  const isNewStyle = Boolean(review.title);
+  const subjectName = isNewStyle ? review.subject : (subjectById(review.subjectId)?.name || "");
+  const topicTitle = isNewStyle ? (review.topic || review.title) : (topicById(review.topicId)?.title || "");
+  const dueDate = review.nextReviewDate || review.dueDate || isoToday;
+  const count = review.count || 0;
+  const isUpcoming = review.status === "pendente" && dueDate > isoToday;
+  const isOverdue = review.status === "pendente" && dueDate < isoToday;
+  const perfNote = !isNewStyle && review.topicId ? ` · ${previousPerformance(review.topicId, review.userId)}` : "";
+  const canRestart = !isNewStyle && review.topicId;
   return `
     <div class="review-row compact-review-row ${isUpcoming ? "is-upcoming" : ""} ${isOverdue ? "is-overdue" : ""}">
       <div>
-        <span class="tag">${subject.name}</span>
-        <strong>${topic.title}</strong>
-        <small>${formatDate(review.dueDate)} · ${review.count} feita(s) · ${previousPerformance(review.topicId, review.userId)}</small>
+        ${subjectName ? `<span class="tag">${subjectName}</span>` : ""}
+        <strong>${topicTitle}</strong>
+        <small>${formatDate(dueDate)} · ${count} feita(s)${perfNote}</small>
       </div>
       <div class="actions">
         ${review.status === "pendente" ? `
-          ${isUpcoming ? `<button class="secondary-button" data-advance-review="${review.id}">${iconSvg("calendar-days")} Adiantar para hoje</button>` : `<button class="secondary-button" data-start-review="${review.id}">${iconSvg("refresh-cw")} Refazer revisão</button>`}
+          ${isUpcoming ? `<button class="secondary-button" data-advance-review="${review.id}">${iconSvg("calendar-days")} Adiantar para hoje</button>` : canRestart ? `<button class="secondary-button" data-start-review="${review.id}">${iconSvg("refresh-cw")} Refazer revisão</button>` : ""}
           <button class="primary-button" data-done-review="${review.id}">${iconSvg("shield-check")} Marcar como feita</button>
         ` : ""}
         ${review.status !== "pendente" ? `<span class="status-pill status-${review.status}">${statusLabel(review.status)}</span>` : ""}
@@ -1251,7 +1370,10 @@ function reviewCard(review) {
 
 function bindReviewButtons(root) {
   root.querySelectorAll("[data-start-review]").forEach((button) => {
-    button.addEventListener("click", () => openTimer(state.reviews.find((review) => review.id === button.dataset.startReview).topicId, true));
+    button.addEventListener("click", () => {
+      const review = state.reviews.find((r) => r.id === button.dataset.startReview);
+      if (review?.topicId) openTimer(review.topicId, true);
+    });
   });
   root.querySelectorAll("[data-done-review]").forEach((button) => {
     button.addEventListener("click", () => openNextReview(button.dataset.doneReview));
@@ -1262,6 +1384,14 @@ function bindReviewButtons(root) {
 }
 
 function advanceReview(reviewId) {
+  const apiReview = studyReviews.find((item) => item.id === reviewId);
+  if (apiReview) {
+    apiUpdateReview(reviewId, { next_review_date: isoToday })
+      .then(() => loadStudyReviews())
+      .then(() => { showToast("Revisão adiantada para hoje."); render(); })
+      .catch((err) => showToast(err.message || "Erro ao adiantar revisão."));
+    return;
+  }
   const review = state.reviews.find((item) => item.id === reviewId);
   if (!review) return;
   review.dueDate = isoToday;
@@ -1516,33 +1646,64 @@ function renderCustomize() {
   const id = studentId();
   const theme = themeFor(id);
   const preset = themePresets[theme.preset || "dark"] || themePresets.dark;
+  const prefs = userPreferences;
   return htmlElement(`
-    <section class="panel">
-      <div class="panel-header"><div><h3>Personalizar App</h3><p>Escolha um tema pronto ou ajuste as cores principais do seu ambiente.</p></div></div>
-      <form id="theme-form" class="form-grid">
-        <fieldset class="choice-section">
-          <legend>Temas Prontos</legend>
-          <div class="theme-preset-grid">
-            ${Object.entries(themePresets).map(([key, item]) => `
-              <label class="theme-preset-card" style="--preset-primary:${item.primary}; --preset-secondary:${item.secondary}; --preset-bg:${item.bg}; --preset-card:${item.card};">
-                <input type="radio" name="preset" value="${key}" ${key === (theme.preset || "dark") ? "checked" : ""}>
-                <span class="theme-preview"><i></i><i></i><i></i></span>
-                <strong>${item.label}</strong>
-              </label>
-            `).join("")}
+    <div class="grid">
+      <section class="panel">
+        <div class="panel-header"><div><h3>Personalizar Aparência</h3><p>Escolha um tema pronto ou ajuste as cores principais do seu ambiente.</p></div></div>
+        <form id="theme-form" class="form-grid">
+          <fieldset class="choice-section">
+            <legend>Temas Prontos</legend>
+            <div class="theme-preset-grid">
+              ${Object.entries(themePresets).map(([key, item]) => `
+                <label class="theme-preset-card" style="--preset-primary:${item.primary}; --preset-secondary:${item.secondary}; --preset-bg:${item.bg}; --preset-card:${item.card};">
+                  <input type="radio" name="preset" value="${key}" ${key === (theme.preset || "dark") ? "checked" : ""}>
+                  <span class="theme-preview"><i></i><i></i><i></i></span>
+                  <strong>${item.label}</strong>
+                </label>
+              `).join("")}
+            </div>
+          </fieldset>
+          <div class="grid cols-2">
+            <label>Estilo dos cards<select name="cardStyle">${options(["soft", "glass", "solid"], theme.cardStyle)}</select></label>
+            <label>Cor principal<input name="primary" type="color" value="${theme.primary}"></label>
+            <label>Cor secundária<input name="secondary" type="color" value="${theme.secondary}"></label>
+            <label>Cor de fundo<input name="bg" type="color" value="${theme.bg || preset.bg}"></label>
+            <label>Cor dos cards<input name="card" type="color" value="${theme.card || preset.card}"></label>
+            <label>Densidade visual<select name="density">${options(["compact", "normal", "comfortable"], theme.density)}</select></label>
           </div>
-        </fieldset>
-        <div class="grid cols-2">
-          <label>Estilo dos cards<select name="cardStyle">${options(["soft", "glass", "solid"], theme.cardStyle)}</select></label>
-          <label>Cor principal<input name="primary" type="color" value="${theme.primary}"></label>
-          <label>Cor secundária<input name="secondary" type="color" value="${theme.secondary}"></label>
-          <label>Cor de fundo<input name="bg" type="color" value="${theme.bg || preset.bg}"></label>
-          <label>Cor dos cards<input name="card" type="color" value="${theme.card || preset.card}"></label>
-          <label>Densidade visual<select name="density">${options(["compact", "normal", "comfortable"], theme.density)}</select></label>
-        </div>
-        <button class="primary-button" type="submit">Salvar aparência</button>
-      </form>
-    </section>
+          <button class="primary-button" type="submit">Salvar aparência</button>
+        </form>
+      </section>
+
+      <section class="panel">
+        <div class="panel-header"><div><h3>Preferências de Estudo</h3><p>Configure metas, notificações e comportamento do app. Salvo diretamente no servidor.</p></div></div>
+        ${hasRemoteSession ? `
+          <form id="prefs-form" class="form-grid">
+            <label>Objetivo de estudo
+              <input name="studyGoal" type="text" placeholder="Ex: Aprovação no TRT-SP 2025" maxlength="255">
+            </label>
+            <div class="grid cols-2">
+              <label>Minutos diários de estudo
+                <input name="dailyStudyMinutes" type="number" min="10" max="600" step="5" value="${prefs.dailyStudyMinutes || 60}">
+              </label>
+              <label>Layout padrão
+                <select name="layoutMode">${options(["default", "compact", "comfortable"], prefs.layoutMode || "default")}</select>
+              </label>
+            </div>
+            <div class="grid cols-2">
+              <label class="checkbox-label">
+                <input type="checkbox" name="notificationsEnabled" ${prefs.notificationsEnabled !== false ? "checked" : ""}> Ativar notificações
+              </label>
+              <label class="checkbox-label">
+                <input type="checkbox" name="soundEnabled" ${prefs.soundEnabled !== false ? "checked" : ""}> Ativar sons de estudo
+              </label>
+            </div>
+            <button class="primary-button" type="submit" id="prefs-submit">Salvar preferências</button>
+          </form>
+        ` : `<p class="muted">Faça login para salvar suas preferências no servidor.</p>`}
+      </section>
+    </div>
   `, (root) => {
     root.querySelectorAll("input[name='preset']").forEach((input) => {
       input.addEventListener("change", () => {
@@ -1571,6 +1732,33 @@ function renderCustomize() {
       showToast("Personalização salva.");
       render();
     });
+    if (hasRemoteSession) {
+      const goalInput = root.querySelector("input[name='studyGoal']");
+      if (goalInput) goalInput.value = prefs.studyGoal || "";
+      root.querySelector("#prefs-form").addEventListener("submit", async (event) => {
+        event.preventDefault();
+        const submitBtn = root.querySelector("#prefs-submit");
+        const formData = new FormData(event.target);
+        submitBtn.disabled = true;
+        submitBtn.textContent = "Salvando...";
+        try {
+          await saveUserPreferences({
+            studyGoal: formData.get("studyGoal") || "",
+            dailyStudyMinutes: Number(formData.get("dailyStudyMinutes") || 60),
+            layoutMode: formData.get("layoutMode") || "default",
+            notificationsEnabled: formData.has("notificationsEnabled"),
+            soundEnabled: formData.has("soundEnabled")
+          });
+          applyUserPreferences();
+          showToast("Preferências salvas com sucesso.");
+        } catch (error) {
+          showToast(error.message || "Erro ao salvar preferências.");
+        } finally {
+          submitBtn.disabled = false;
+          submitBtn.textContent = "Salvar preferências";
+        }
+      });
+    }
   });
 }
 
@@ -2100,6 +2288,9 @@ function saveReviews(topicId, dueDates) {
   if (!dueDates.length) return showToast("Selecione pelo menos uma data de revisão.");
   const id = studentId();
   const topic = topicById(topicId);
+  const subject = subjectById(topic.subjectId);
+
+  // Mantém no estado antigo para compatibilidade com dashboard
   dueDates.forEach((dueDate) => {
     state.reviews.push({ id: idFor("r"), userId: id, subjectId: topic.subjectId, topicId, originalDate: isoToday, dueDate, count: 0, status: "pendente" });
   });
@@ -2107,12 +2298,79 @@ function saveReviews(topicId, dueDates) {
   closeModal();
   showToast(`${dueDates.length} revisão(ões) programada(s).`);
   render();
+
+  // Persiste também na nova tabela study_reviews via API
+  if (hasRemoteSession) {
+    Promise.all(
+      dueDates.map((dueDate) =>
+        apiCreateReview({
+          title: topic.title,
+          subject: subject?.name || "",
+          topic: topic.title,
+          next_review_date: dueDate
+        }).catch(() => {})
+      )
+    ).then(() => loadStudyReviews()).then(() => render()).catch(() => {});
+  }
 }
 
 function openNextReview(reviewId) {
+  const apiReview = studyReviews.find((item) => item.id === reviewId);
+
+  if (apiReview) {
+    // Revisão da nova tabela study_reviews: usa dificuldade para calcular próxima data
+    openModal(`
+      <div class="panel-header"><div><h3>Como foi a revisão?</h3><p>${apiReview.title}</p></div></div>
+      <p style="margin-bottom:12px;opacity:.8">Escolha a dificuldade para agendar a próxima revisão automaticamente.</p>
+      <div class="grid cols-2" style="gap:8px">
+        ${[
+          ["facil", "Fácil", "Próxima em 7 dias"],
+          ["medio", "Médio", "Próxima em 3 dias"],
+          ["dificil", "Difícil", "Próxima em 1 dia"],
+          ["encerrar", "Encerrar", "Não revisar mais"]
+        ].map(([diff, label, hint]) => `
+          <button class="${diff === "encerrar" ? "danger-button" : "ghost-button"}" data-difficulty="${diff}">
+            <strong>${label}</strong><br><small>${hint}</small>
+          </button>`).join("")}
+      </div>
+    `, (modal) => {
+      modal.querySelectorAll("[data-difficulty]").forEach((button) => {
+        button.addEventListener("click", async () => {
+          const diff = button.dataset.difficulty;
+          const isClosing = diff === "encerrar";
+          try {
+            await apiUpdateReview(reviewId, {
+              status: isClosing ? "encerrada" : "concluida",
+              difficulty: isClosing ? undefined : diff
+            });
+            if (!isClosing) {
+              const dayMap = { facil: 7, medio: 3, dificil: 1 };
+              await apiCreateReview({
+                title: apiReview.title,
+                subject: apiReview.subject || "",
+                topic: apiReview.topic || "",
+                difficulty: diff,
+                notes: apiReview.notes || ""
+              });
+            }
+            await loadStudyReviews();
+            closeModal();
+            showToast("Revisão atualizada.");
+            render();
+          } catch (err) {
+            showToast(err.message || "Erro ao atualizar revisão.");
+          }
+        });
+      });
+    });
+    return;
+  }
+
+  // Revisão do sistema antigo (state.reviews)
   const review = state.reviews.find((item) => item.id === reviewId);
+  if (!review) return;
   openModal(`
-    <div class="panel-header"><div><h3>Próxima revisão</h3><p>${topicById(review.topicId).title}</p></div></div>
+    <div class="panel-header"><div><h3>Próxima revisão</h3><p>${topicById(review.topicId)?.title || "Tópico"}</p></div></div>
     <div class="grid cols-3">
       ${[
         ["1", "Revisar amanhã"],
@@ -2127,7 +2385,7 @@ function openNextReview(reviewId) {
     modal.querySelectorAll("[data-next-review]").forEach((button) => {
       button.addEventListener("click", () => {
         const days = Number(button.dataset.nextReview);
-        review.count += 1;
+        review.count = (review.count || 0) + 1;
         review.status = days === 0 ? "encerrada" : "feita";
         if (days > 0) {
           state.reviews.push({ ...review, id: idFor("r"), dueDate: addDaysISO(days), status: "pendente" });
@@ -3073,6 +3331,7 @@ function statusLabel(status) {
     pendente: "Pendente",
     "em-andamento": "Em Andamento",
     concluido: "Concluído",
+    concluida: "Concluída",
     "nao-concluido": "Não Concluído",
     parcial: "Parcial",
     feita: "Feita",
