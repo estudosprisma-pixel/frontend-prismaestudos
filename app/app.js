@@ -134,6 +134,7 @@ let hasRemoteSession = false;
 let saveTimer = null;
 let studyReviews = [];
 let studyReviewsLoaded = false;
+let finishStudySnapshots = {};
 let userPreferences = {
   theme: "dark",
   accentColor: "blue",
@@ -2251,6 +2252,7 @@ function openFinishStudy(topicId, studiedMinutes, isReview = false) {
       <button class="primary-button" data-result="concluido">Sim, concluí o tópico</button>
       <button class="ghost-button" data-result="nao-concluido">Não, preciso continuar depois</button>
       <button class="secondary-button" data-result="parcial">Estudei parcialmente</button>
+      <button class="ghost-button" type="button" data-close-modal>Voltar</button>
     </div>
   `, (modal) => {
     modal.querySelectorAll("[data-result]").forEach((button) => {
@@ -2259,9 +2261,40 @@ function openFinishStudy(topicId, studiedMinutes, isReview = false) {
   });
 }
 
+function finishStudySnapshotKey(userId, topicId) {
+  return `${userId}:${topicId}`;
+}
+
+function createFinishStudySnapshot(userId, topicId) {
+  const key = finishStudySnapshotKey(userId, topicId);
+  if (finishStudySnapshots[key]) return key;
+  finishStudySnapshots[key] = {
+    userId,
+    topicId,
+    userTopics: JSON.parse(JSON.stringify(state.userTopics[userId] || {})),
+    sessionsLength: state.sessions.length
+  };
+  return key;
+}
+
+function restoreFinishStudySnapshot(snapshotKey) {
+  const snapshot = finishStudySnapshots[snapshotKey];
+  if (!snapshot) return false;
+  state.userTopics[snapshot.userId] = JSON.parse(JSON.stringify(snapshot.userTopics));
+  state.sessions = state.sessions.slice(0, snapshot.sessionsLength);
+  delete finishStudySnapshots[snapshotKey];
+  saveStateNow();
+  render();
+  return true;
+}
+
 function finalizeStudy(topicId, result, studiedMinutes, isReview) {
   const id = studentId();
   const topic = topicById(topicId);
+  let snapshotKey = null;
+  if (!isReview && result === "concluido") {
+    snapshotKey = createFinishStudySnapshot(id, topicId);
+  }
   ensureUserTopic(id, topicId);
   const userTopic = state.userTopics[id][topicId];
   userTopic.status = result;
@@ -2290,7 +2323,7 @@ function finalizeStudy(topicId, result, studiedMinutes, isReview) {
     render();
     return;
   }
-  if (result === "concluido") openReviewSetup(topicId);
+  if (result === "concluido") openReviewSetup(topicId, { studiedMinutes, isReview, snapshotKey });
   if (result === "nao-concluido") {
     showToast("O tópico continuará no próximo estudo.");
     closeModal();
@@ -2321,7 +2354,7 @@ function openPartialChoice(topicId) {
   });
 }
 
-function openReviewSetup(topicId) {
+function openReviewSetup(topicId, context = {}) {
   const options = [
     ["1", "Amanhã"],
     ["7", "Daqui 7 dias"],
@@ -2342,13 +2375,22 @@ function openReviewSetup(topicId) {
       `).join("")}
       <label>Personalizado<input id="custom-review-date" type="date"></label>
     </div>
-    <button class="primary-button" id="save-review-schedule" style="margin-top:16px">Salvar revisão</button>
+    <div class="grid" style="margin-top:16px">
+      <button class="ghost-button" id="back-to-finish-study" type="button">Voltar</button>
+      <button class="primary-button" id="save-review-schedule" type="button">Salvar revisão</button>
+    </div>
   `, (modal) => {
+    modal.querySelector("#back-to-finish-study").addEventListener("click", () => {
+      if (context.snapshotKey) restoreFinishStudySnapshot(context.snapshotKey);
+      openFinishStudy(topicId, context.studiedMinutes, context.isReview);
+    });
     modal.querySelector("#save-review-schedule").addEventListener("click", () => {
       const selectedDates = [...modal.querySelectorAll("input[name='review-days']:checked")].map((input) => addDaysISO(Number(input.value)));
       const customDate = modal.querySelector("#custom-review-date").value;
       if (customDate) selectedDates.push(customDate);
-      saveReviews(topicId, unique(selectedDates));
+      const reviewDates = unique(selectedDates);
+      if (context.snapshotKey && reviewDates.length) delete finishStudySnapshots[context.snapshotKey];
+      saveReviews(topicId, reviewDates);
     });
   });
 }
