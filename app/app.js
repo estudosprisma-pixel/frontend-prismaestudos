@@ -369,6 +369,13 @@ function mergeSeedCatalog(source) {
       merged.userSubjects[userId] = unique([...(merged.userSubjects[userId] || []), ...activeContest.subjects]);
       profile.interests = unique([...(profile.interests || []), ...activeContest.subjects]);
     }
+    const ownSubjectIds = (merged.subjects || [])
+      .filter((subject) => subject.ownerId === userId && !subject.isBase)
+      .map((subject) => subject.id);
+    profile.extraInterests = unique([...(profile.extraInterests || []), ...ownSubjectIds]);
+    profile.interests = unique([...(profile.interests || []), ...ownSubjectIds]);
+    merged.userSubjects ||= {};
+    merged.userSubjects[userId] = unique([...(merged.userSubjects[userId] || []), ...ownSubjectIds]);
     merged.profiles[userId] = profile;
   });
   return merged;
@@ -569,14 +576,53 @@ function normalizeRemoteState(remoteState) {
 }
 
 function preserveLocalUiState(remoteState, localState) {
+  const userId = localState.currentUserId;
   return {
     ...remoteState,
+    profiles: mergeLocalProfileState(remoteState.profiles, localState.profiles, userId),
+    subjects: mergeOwnedSubjects(remoteState.subjects, localState.subjects, userId),
+    topics: mergeOwnedTopics(remoteState.topics, localState.topics, localState.subjects, userId),
+    userSubjects: mergeLocalUserSubjects(remoteState.userSubjects, localState.userSubjects, userId),
     userTopics: mergeTopicChecklistState(remoteState.userTopics, localState.userTopics),
     themes: localState.themes,
     dailyEnergy: localState.dailyEnergy,
     energyPromptOpen: localState.energyPromptOpen,
     activeTimers: localState.activeTimers,
     syllabusActiveSubjectId: localState.syllabusActiveSubjectId
+  };
+}
+
+function mergeLocalProfileState(remoteProfiles = {}, localProfiles = {}, userId) {
+  if (!userId || !localProfiles?.[userId]) return remoteProfiles;
+  const remoteProfile = remoteProfiles?.[userId] || {};
+  const localProfile = localProfiles[userId] || {};
+  return {
+    ...remoteProfiles,
+    [userId]: {
+      ...remoteProfile,
+      extraInterests: unique([...(remoteProfile.extraInterests || []), ...(localProfile.extraInterests || [])]),
+      interests: unique([...(remoteProfile.interests || []), ...(localProfile.interests || [])])
+    }
+  };
+}
+
+function mergeOwnedSubjects(remoteSubjects = [], localSubjects = [], userId) {
+  if (!userId) return remoteSubjects || [];
+  return mergeById(remoteSubjects || [], (localSubjects || []).filter((subject) => subject.ownerId === userId));
+}
+
+function mergeOwnedTopics(remoteTopics = [], localTopics = [], localSubjects = [], userId) {
+  if (!userId) return remoteTopics || [];
+  const localOwnedSubjectIds = new Set((localSubjects || []).filter((subject) => subject.ownerId === userId).map((subject) => subject.id));
+  const ownedTopics = (localTopics || []).filter((topic) => topic.ownerId === userId || localOwnedSubjectIds.has(topic.subjectId));
+  return mergeById(remoteTopics || [], ownedTopics);
+}
+
+function mergeLocalUserSubjects(remoteUserSubjects = {}, localUserSubjects = {}, userId) {
+  if (!userId) return remoteUserSubjects || {};
+  return {
+    ...remoteUserSubjects,
+    [userId]: unique([...(remoteUserSubjects?.[userId] || []), ...(localUserSubjects?.[userId] || [])])
   };
 }
 
