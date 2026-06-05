@@ -1406,6 +1406,8 @@ function renderProfile(isSetup = false) {
       const days = checkedValues(event.target, "days");
       const interests = checkedValues(event.target, "interests");
       const contests = checkedValues(event.target, "contests");
+      const extraInterests = checkedValues(event.target, "extraInterests");
+      const ownSubjects = studentExtraSubjectOptions(id).map((subject) => subject.id);
       if (!days.length || !interests.length || !contests.length) {
         showToast("Selecione dias disponíveis, matérias e pelo menos um concurso.");
         return;
@@ -1417,9 +1419,9 @@ function renderProfile(isSetup = false) {
         dailyMinutes: Number(data.get("dailyMinutes")),
         days,
         preferredTime: data.get("preferredTime"),
-        interests,
+        interests: unique([...interests, ...extraInterests]),
         contests,
-        extraInterests: checkedValues(event.target, "extraInterests"),
+        extraInterests: unique([...extraInterests, ...ownSubjects]),
         activeContestId: contests.includes(profile.activeContestId) ? profile.activeContestId : contests[0],
         level: data.get("level"),
         reviewPreference: data.get("reviewPreference"),
@@ -1427,7 +1429,7 @@ function renderProfile(isSetup = false) {
         mixSubjects: data.get("mixSubjects") === "sim",
         configured: true
       };
-      state.userSubjects[id] = state.profiles[id].interests;
+      state.userSubjects[id] = unique([...state.profiles[id].interests, ...state.profiles[id].extraInterests]);
       initializeUserTopics(id);
       saveState();
       showToast("Perfil atualizado.");
@@ -2157,7 +2159,13 @@ function openSubjectModal(subjectId = null, forceBase = false) {
       } else {
         const id = idFor("s");
         state.subjects.push({ id, name: data.get("name"), color: data.get("color"), isBase: forceBase || isAdmin(), ownerId: forceBase || isAdmin() ? null : studentId() });
-        state.userSubjects[studentId()] = unique([...(state.userSubjects[studentId()] || []), id]);
+        const ownerId = studentId();
+        state.userSubjects[ownerId] = unique([...(state.userSubjects[ownerId] || []), id]);
+        const profile = profileFor(ownerId);
+        profile.extraInterests = unique([...(profile.extraInterests || []), id]);
+        profile.interests = unique([...(profile.interests || []), id]);
+        state.subjectsActiveSubjectId ||= {};
+        state.subjectsActiveSubjectId[ownerId] = id;
       }
       saveState();
       closeModal();
