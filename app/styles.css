@@ -1570,11 +1570,13 @@ input:focus, select:focus, textarea:focus {
 }
 
 .contest-choice-list {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(150px, 174px));
+  justify-content: start;
 }
 
 .contest-choice-grid {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(150px, 174px));
+  justify-content: start;
 }
 
 .days-grid {
@@ -1651,25 +1653,29 @@ input:focus, select:focus, textarea:focus {
 
 .contest-choice-card {
   overflow: hidden;
-  min-height: 146px;
-  padding: 12px 42px 12px 12px;
-  grid-template-columns: 92px minmax(0, 1fr);
+  min-height: 218px;
+  max-width: 174px;
+  justify-self: start;
+  padding: 12px 28px 12px;
+  grid-template-columns: 1fr;
   grid-template-areas:
-    "image role"
-    "image organ";
-  align-items: center;
-  gap: 6px 14px;
+    "image"
+    "role"
+    "organ";
+  justify-items: center;
+  align-content: start;
+  gap: 8px;
   border-color: color-mix(in srgb, var(--primary), transparent 72%);
   background: linear-gradient(135deg, rgba(15, 23, 42, 0.96), rgba(21, 37, 56, 0.9));
 }
 
 .contest-choice-card .contest-choice-image {
   grid-area: image;
-  width: 92px;
-  height: 122px;
+  width: 78px;
+  height: 108px;
   border: 1px solid color-mix(in srgb, var(--primary), transparent 64%);
-  border-radius: 10px;
-  box-shadow: 0 16px 32px rgba(0, 0, 0, 0.34);
+  border-radius: 8px;
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.32);
 }
 
 .contest-choice-card .contest-choice-image::after,
@@ -1693,9 +1699,10 @@ input:focus, select:focus, textarea:focus {
 
 .contest-choice-card > span {
   grid-area: role;
-  align-self: end;
+  align-self: start;
   padding-top: 0;
-  font-size: 1rem;
+  font-size: 0.86rem;
+  text-align: center;
 }
 
 .contest-choice-card small {
@@ -1703,6 +1710,8 @@ input:focus, select:focus, textarea:focus {
   align-self: start;
   padding-bottom: 0;
   color: var(--muted);
+  font-size: 0.72rem;
+  text-align: center;
 }
 
 .collapsible-choice-section {
