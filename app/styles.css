@@ -1651,37 +1651,57 @@ input:focus, select:focus, textarea:focus {
 
 .contest-choice-card {
   overflow: hidden;
-  min-height: 196px;
-  padding: 0;
-  align-content: end;
+  min-height: 146px;
+  padding: 12px 42px 12px 12px;
+  grid-template-columns: 92px minmax(0, 1fr);
+  grid-template-areas:
+    "image role"
+    "image organ";
+  align-items: center;
+  gap: 6px 14px;
   border-color: color-mix(in srgb, var(--primary), transparent 72%);
-  background: #111923;
+  background: linear-gradient(135deg, rgba(15, 23, 42, 0.96), rgba(21, 37, 56, 0.9));
+}
+
+.contest-choice-card .contest-choice-image {
+  grid-area: image;
+  width: 92px;
+  height: 122px;
+  border: 1px solid color-mix(in srgb, var(--primary), transparent 64%);
+  border-radius: 10px;
+  box-shadow: 0 16px 32px rgba(0, 0, 0, 0.34);
+}
+
+.contest-choice-card .contest-choice-image::after,
+.contest-choice-card .contest-choice-image span {
+  display: none;
 }
 
 .contest-choice-image img {
   width: 100%;
-  height: 112px;
+  height: 100%;
   object-fit: cover;
-  object-position: center;
+  object-position: center top;
   display: block;
-  border-bottom: 1px solid var(--line);
-}
-
-.contest-choice-image span {
-  font-size: 1rem;
+  border-bottom: 0;
 }
 
 .contest-choice-card > span,
 .contest-choice-card small {
-  padding-inline: 14px 38px;
+  padding-inline: 0;
 }
 
 .contest-choice-card > span {
-  padding-top: 10px;
+  grid-area: role;
+  align-self: end;
+  padding-top: 0;
+  font-size: 1rem;
 }
 
 .contest-choice-card small {
-  padding-bottom: 14px;
+  grid-area: organ;
+  align-self: start;
+  padding-bottom: 0;
   color: var(--muted);
 }
 

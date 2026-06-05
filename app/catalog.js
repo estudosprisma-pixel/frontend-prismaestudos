@@ -441,7 +441,7 @@
         area: "Administrativa",
         nivel,
         organ: "Tribunal Regional do Trabalho da 2ª Região",
-        image: `assets/fotos editais/${prefix === "a" ? "edital-analista-judiciario-area-administrativa.png" : "edital-tecnico-judiciario-area-administrativa.png"}`,
+        image: `assets/fotos editais/${prefix === "a" ? "edital-analista-judiciario-area-administrativa.png" : "edital-tecnico-judiciario-area-administrativa.png"}?v=20260605-trt-covers`,
         accent,
         conhecimentosGerais: subjects.filter((subject) => subject.category === "Conhecimentos Gerais").map((subject) => subject.id),
         conhecimentosEspecificos: subjects.filter((subject) => subject.category === "Conhecimentos Específicos").map((subject) => subject.id),
