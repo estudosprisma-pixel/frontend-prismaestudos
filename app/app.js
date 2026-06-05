@@ -1296,7 +1296,7 @@ function renderSubjects() {
       </section>
     </div>
   `, (root) => {
-    root.querySelector("#add-subject").addEventListener("click", () => openSubjectModal());
+    root.querySelector("#add-subject").addEventListener("click", () => openSubjectModal(null, false, id));
     root.querySelectorAll("[data-select-subject]").forEach((button) => {
       button.addEventListener("click", () => {
         state.subjectsActiveSubjectId ||= {};
@@ -2468,7 +2468,8 @@ function openNextReview(reviewId) {
   });
 }
 
-function openSubjectModal(subjectId = null, forceBase = false) {
+function openSubjectModal(subjectId = null, forceBase = false, ownerIdOverride = null) {
+  const ownerId = ownerIdOverride || studentId();
   const subject = subjectId ? subjectById(subjectId) : { name: "", color: "#25d4c8", isBase: forceBase };
   openModal(`
     <div class="panel-header"><div><h3>${subjectId ? "Editar matéria" : "Nova matéria"}</h3><p>${subject.isBase ? "Catálogo base global" : "Matéria privada do estudante"}</p></div><button class="icon-button" data-close-modal>X</button></div>
@@ -2487,8 +2488,7 @@ function openSubjectModal(subjectId = null, forceBase = false) {
         Object.assign(subject, { name: data.get("name"), color: data.get("color") });
       } else {
         const id = idFor("s");
-        state.subjects.push({ id, name: data.get("name"), color: data.get("color"), isBase: forceBase || isAdmin(), ownerId: forceBase || isAdmin() ? null : studentId() });
-        const ownerId = studentId();
+        state.subjects.push({ id, name: data.get("name"), color: data.get("color"), isBase: forceBase, ownerId: forceBase ? null : ownerId });
         state.userSubjects[ownerId] = unique([...(state.userSubjects[ownerId] || []), id]);
         const profile = profileFor(ownerId);
         profile.extraInterests = unique([...(profile.extraInterests || []), id]);
@@ -2504,7 +2504,10 @@ function openSubjectModal(subjectId = null, forceBase = false) {
 }
 
 function openTopicModal(subjectId = null, topicId = null, forceBase = false) {
-  const topic = topicId ? topicById(topicId) : { title: "", subjectId, order: topicsForSubject(subjectId).length + 1, suggestedMinutes: 45, isBase: forceBase || isAdmin() };
+  const subject = subjectById(subjectId);
+  const topicOwnerId = forceBase ? null : (subject.ownerId || studentId());
+  const topicIsBase = forceBase || Boolean(subject.isBase && !subject.ownerId);
+  const topic = topicId ? topicById(topicId) : { title: "", subjectId, order: topicsForSubject(subjectId).length + 1, suggestedMinutes: 45, isBase: topicIsBase };
   openModal(`
     <div class="panel-header"><div><h3>${topicId ? "Editar tópico" : "Novo tópico"}</h3><p>${subjectById(topic.subjectId).name}</p></div><button class="icon-button" data-close-modal>X</button></div>
     <form id="topic-form" class="form-grid">
@@ -2531,8 +2534,8 @@ function openTopicModal(subjectId = null, topicId = null, forceBase = false) {
           title: data.get("title"),
           order: Number(data.get("order")),
           suggestedMinutes: Number(data.get("suggestedMinutes")),
-          isBase: forceBase || isAdmin(),
-          ownerId: forceBase || isAdmin() ? null : studentId()
+          isBase: topicIsBase,
+          ownerId: topicIsBase ? null : topicOwnerId
         });
         state.users.filter((user) => user.role === "student").forEach((user) => initializeUserTopics(user.id));
       }
