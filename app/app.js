@@ -394,6 +394,29 @@ function saveState() {
   queueRemoteSave();
 }
 
+async function saveStateNow() {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  if (!hasRemoteSession) return;
+  clearTimeout(saveTimer);
+  try {
+    const response = await fetch(`${API_BASE}/state`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({ state })
+    });
+    if (!response.ok) throw new Error("Save failed");
+    const data = await response.json();
+    const route = state.route;
+    const localState = state;
+    state = preserveLocalUiState(normalizeRemoteState(data.state), localState);
+    state.route = route;
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  } catch {
+    showToast("Backend indisponivel. Alteracoes mantidas localmente.");
+  }
+}
+
 async function login(email, password) {
   return loginWithApi(email, password);
 }
@@ -2455,9 +2478,11 @@ function openSubjectModal(subjectId = null, forceBase = false) {
       <button class="primary-button" type="submit">Salvar matéria</button>
     </form>
   `, (modal) => {
-    modal.querySelector("#subject-form").addEventListener("submit", (event) => {
+    modal.querySelector("#subject-form").addEventListener("submit", async (event) => {
       event.preventDefault();
       const data = new FormData(event.target);
+      const submitButton = event.target.querySelector('button[type="submit"]');
+      if (submitButton) submitButton.disabled = true;
       if (subjectId) {
         Object.assign(subject, { name: data.get("name"), color: data.get("color") });
       } else {
@@ -2471,7 +2496,7 @@ function openSubjectModal(subjectId = null, forceBase = false) {
         state.subjectsActiveSubjectId ||= {};
         state.subjectsActiveSubjectId[ownerId] = id;
       }
-      saveState();
+      await saveStateNow();
       closeModal();
       render();
     });
@@ -2491,9 +2516,11 @@ function openTopicModal(subjectId = null, topicId = null, forceBase = false) {
       <button class="primary-button" type="submit">Salvar tópico</button>
     </form>
   `, (modal) => {
-    modal.querySelector("#topic-form").addEventListener("submit", (event) => {
+    modal.querySelector("#topic-form").addEventListener("submit", async (event) => {
       event.preventDefault();
       const data = new FormData(event.target);
+      const submitButton = event.target.querySelector('button[type="submit"]');
+      if (submitButton) submitButton.disabled = true;
       if (topicId) {
         Object.assign(topic, { title: data.get("title"), order: Number(data.get("order")), suggestedMinutes: Number(data.get("suggestedMinutes")) });
       } else {
@@ -2509,7 +2536,7 @@ function openTopicModal(subjectId = null, topicId = null, forceBase = false) {
         });
         state.users.filter((user) => user.role === "student").forEach((user) => initializeUserTopics(user.id));
       }
-      saveState();
+      await saveStateNow();
       closeModal();
       render();
     });
